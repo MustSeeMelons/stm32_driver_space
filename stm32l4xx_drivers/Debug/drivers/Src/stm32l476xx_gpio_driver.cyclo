@@ -1,0 +1,10 @@
+../drivers/Src/stm32l476xx_gpio_driver.c:3:6:GPIO_PCLK	1
+../drivers/Src/stm32l476xx_gpio_driver.c:6:6:GPIO_Init	1
+../drivers/Src/stm32l476xx_gpio_driver.c:9:6:GPIO_DeInit	1
+../drivers/Src/stm32l476xx_gpio_driver.c:12:9:GPIO_ReadFromInputPin	1
+../drivers/Src/stm32l476xx_gpio_driver.c:16:10:GPIO_ReadFromInputPort	1
+../drivers/Src/stm32l476xx_gpio_driver.c:20:6:GPIO_WriteToOutputPin	1
+../drivers/Src/stm32l476xx_gpio_driver.c:23:6:GPIO_WriteToOutputPort	1
+../drivers/Src/stm32l476xx_gpio_driver.c:26:6:GPIO_TogglePin	1
+../drivers/Src/stm32l476xx_gpio_driver.c:29:6:GPIO_IRQConfig	1
+../drivers/Src/stm32l476xx_gpio_driver.c:32:6:GPIO_IRQHandle	1
