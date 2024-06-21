@@ -12,8 +12,8 @@
 #define SRAM1_BASE_ADDR 0x20000000U // 0x2003FFFF - 256kB
 #define SRAM2_BASE_ADDR 0x10000000U // 0x10008000 - 32kBb
 #define SRAM SRAM1_BASE_ADDR
-#define ROM_1 0x1FFF 0000 // 0x1FFF 7000 - 28 kB
-#define ROM_2 0x1FFF 8000 // 0x1FFF F000 - 28 kB
+#define ROM_1 0x1FFF0000 // 0x1FFF 7000 - 28 kB
+#define ROM_2 0x1FFF8000 // 0x1FFF F000 - 28 kB
 
 // Buses
 #define PERIPH_BASE 0x40000000U
@@ -59,19 +59,19 @@
 
 // Peripheral definitions, TODO document each field
 typedef struct {
-	__vo uint32_t MODER; // 0x00 offset
-	volatile uint32_t OTYPER; // 0x04 bytes offset or a uint32, also 4 bytes, 32 bits
-	volatile uint32_t OSPEEDR;
-	volatile uint32_t PUPDR;
-	volatile uint32_t IDR;
-	volatile uint32_t ODR;
-	volatile uint32_t BSRR;
-	volatile uint32_t LCKR;
-	// volatile uint32_t AFRL; // Alternate function register low
-	// volatile uint32_t AFRH; // Alternate function register high
-	volatile uint32_t AFR[2]; // [0] low, [1] high
-	volatile uint32_t BRR;
-	volatile uint32_t ASCR;
+	volatile uint32_t MODER; 	// 0x00 offset
+	volatile uint32_t OTYPER; 	// 0x04 bytes offset or a uint32, also 4 bytes, 32 bits
+	volatile uint32_t OSPEEDR; 	// 0x08
+	volatile uint32_t PUPDR; 	// 0x0C
+	volatile uint32_t IDR;		// 0x10
+	volatile uint32_t ODR;		// 0x14
+	volatile uint32_t BSRR;		// 0x18
+	volatile uint32_t LCKR;		// 0x1C
+	// volatile uint32_t AFRL; 	// 0x20 Alternate function register low
+	// volatile uint32_t AFRH; 	// 0x24 Alternate function register high
+	volatile uint32_t AFR[2]; 	// [0] low, [1] high
+	volatile uint32_t BRR;		// 0x28
+	volatile uint32_t ASCR;		// 0x2C
 
 } GPIO_RegDef_t;
 
@@ -85,28 +85,36 @@ typedef struct {
 	volatile uint32_t PLLSAI2CFGR; // 0x14
 	volatile uint32_t CIER; // 0x18
 	volatile uint32_t CIFR; // 0x1C
-	volatile uint64_t CICR; // 0x20
+	volatile uint32_t CICR; // 0x20
+	uint32_t RESERVED0;
 	volatile uint32_t AHB1RSTR; // 0x28
 	volatile uint32_t AHB2RSTR; // 0x2C
-	volatile uint64_t AHB3RSTR; // 0x30
+	volatile uint32_t AHB3RSTR; // 0x30
+	uint32_t RESERVED1;
 	volatile uint32_t APB1RSTR1; // 0x38
 	volatile uint32_t APB1RSTR2; // 0x3C
-	volatile uint64_t APB2RSTR; // 0x40
-	volatile uint32_t AHB1ENR; //0x48
+	volatile uint32_t APB2RSTR; // 0x40
+	uint32_t RESERVED2;
+	volatile uint32_t AHB1ENR; // 0x48
 	volatile uint32_t AHB2ENR; // 0x4c
-	volatile uint64_t AHB3ENR; // 0x50
+	volatile uint32_t AHB3ENR; // 0x50
+	uint32_t RESERVED3;
 	volatile uint32_t APB1ENR1; // 0x58
 	volatile uint32_t APB1ENR2; // 0x5C
-	volatile uint64_t APB2ENR; // 0x60
+	volatile uint32_t APB2ENR; // 0x60
+	uint32_t RESERVED4;
 	volatile uint32_t AHB1SMENR; // 0x68
 	volatile uint32_t AHB2SMENR; // 0x6C
-	volatile uint64_t AHB3SMENR; // 0x70
+	volatile uint32_t AHB3SMENR; // 0x70
+	uint32_t RESERVED5;
 	volatile uint32_t APB1SMENR1; // 0x78
 	volatile uint32_t APB1SMENR2; // 0x7C
-	volatile uint64_t APB2SMENR; // 0x80
-	volatile uint64_t CCIPR; // 0x88
+	volatile uint32_t APB2SMENR; // 0x80
+	uint32_t RESERVED6;
+	volatile uint32_t CCIPR; // 0x88
+	uint32_t RESERVED7;
 	volatile uint32_t BDCR; // 0x90
-	volatile uint64_t CSR; // 0x94
+	volatile uint32_t CSR; // 0x94
 } RCC_RegDef;
 
 #define GPIOA ((GPIO_RegDef_t*)GPIOA_BASE_ADDR)
@@ -118,7 +126,7 @@ typedef struct {
 #define GPIOG ((GPIO_RegDef_t*)GPIOG_BASE_ADDR)
 #define GPIOH ((GPIO_RegDef_t*)GPIOH_BASE_ADDR)
 
-#define RCC ((RCC_RegDef*)GPIOH_BASE_ADDR)
+#define RCC ((RCC_RegDef*)RCC_BASE_ADDR)
 
 // Clock enable macros
 #define GPIOA_PCLK_EN() (RCC->AHB2ENR |= (1 << 0)) // PCLK - peripheral clock
@@ -172,6 +180,15 @@ typedef struct {
 #define UART5_PCLK_DI() (RCC->APB1ENR1 &= ~(1 << 20))
 
 #define SYSCFG_PCLK_DI() (RCC->APB2ENR &= ~(1 << 0))
+
+#define GPIOA_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 0)); (RCC->AHB2RSTR &= ~(1 << 0)); } while(0)
+#define GPIOB_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 1)); (RCC->AHB2RSTR &= ~(1 << 1)); } while(0)
+#define GPIOC_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 2)); (RCC->AHB2RSTR &= ~(1 << 2)); } while(0)
+#define GPIOD_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 3)); (RCC->AHB2RSTR &= ~(1 << 3)); } while(0)
+#define GPIOE_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 4)); (RCC->AHB2RSTR &= ~(1 << 4)); } while(0)
+#define GPIOF_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 5)); (RCC->AHB2RSTR &= ~(1 << 5)); } while(0)
+#define GPIOG_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 6)); (RCC->AHB2RSTR &= ~(1 << 6)); } while(0)
+#define GPIOH_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 7)); (RCC->AHB2RSTR &= ~(1 << 7)); } while(0)
 
 // Generic macros
 #define ENABLE 			1

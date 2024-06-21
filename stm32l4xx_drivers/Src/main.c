@@ -18,13 +18,73 @@
 
 #include <stdint.h>
 #include "stm32l476xx.h"
+#include "stm32l476xx_gpio_driver.h"
 
+// XXX why was this generated?
 //#if !defined(__SOFT_FP__) && defined(__ARM_FP)
 //  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 //#endif
 
+void led_push_pull() {
+	// Setup GPIO
+	GPIO_Handle_t gpio_handle = {
+		.pGPIOx = GPIOA,
+		.GPIO_PinConfig = {
+			.GPIO_PinNumber = GPIO_PIN_N5,
+			.GPIO_PinMode = GPIO_MODE_OUTPUT,
+			.GPIO_PinSpeed = GPIO_SPEED_FAST,
+			.GPIO_PinPuPdControl = GPIO_NO_PUPD,
+			.GPIO_PinOPType = GPIO_OP_TYPE_PP,
+		}
+	};
+
+	// Enable clock for port A
+	GPIO_PCLK(GPIOA, ENABLE);
+
+	GPIO_Init(&gpio_handle);
+
+	while (1) {
+		// Write to GPIO
+		GPIO_TogglePin(GPIOA, gpio_handle.GPIO_PinConfig.GPIO_PinNumber);
+
+		// Locking delay
+		for(uint32_t i=0;i<500000;i++);
+	}
+}
+
+// Very dim, pull up is ~40k Ohm, needs external small pull up
+void led_open_drain() {
+	// Setup GPIO
+	GPIO_Handle_t gpio_handle = {
+		.pGPIOx = GPIOA,
+		.GPIO_PinConfig = {
+			.GPIO_PinNumber = GPIO_PIN_N5,
+			.GPIO_PinMode = GPIO_MODE_OUTPUT,
+			.GPIO_PinSpeed = GPIO_SPEED_FAST,
+			.GPIO_PinPuPdControl = GPIO_PIN_PU,
+			.GPIO_PinOPType = GPIO_OP_TYPE_OD,
+		}
+	};
+
+	// Enable clock for port A
+	GPIO_PCLK(GPIOA, ENABLE);
+
+	GPIO_Init(&gpio_handle);
+
+	while (1) {
+		// Write to GPIO
+		GPIO_TogglePin(GPIOA, gpio_handle.GPIO_PinConfig.GPIO_PinNumber);
+
+		// Locking delay
+		for(uint32_t i=0;i<500000;i++);
+	}
+}
+
+void led_button_toggle() {
+	// TODO implement
+}
+
 int main(void)
 {
-    /* Loop forever */
-	for(;;);
+	led_push_pull();
 }

@@ -38,8 +38,8 @@ typedef struct {
 
 // GPIO pull up/down's
 #define GPIO_NO_PUPD	0
-#define GPIP_PIN_PU			1
-#define GPIP_PIN_PD			2
+#define GPIO_PIN_PU		1
+#define GPIO_PIN_PD		2
 
 // GPIO pin numbers
 #define GPIO_PIN_N0		0
@@ -57,6 +57,7 @@ typedef struct {
 #define GPIO_PIN_N12	12
 #define GPIO_PIN_N13	13
 #define GPIO_PIN_N14	14
+#define GPIO_PIN_N15	15
 
 void GPIO_PCLK(GPIO_RegDef_t *pGPIOx, uint8_t isEnable);
 
