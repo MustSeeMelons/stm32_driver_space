@@ -45,8 +45,11 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 	GPIO_PinConfig_t pinConfig = pGPIOHandle->GPIO_PinConfig;
 	uint32_t mode = 0;
 
+	uint8_t pin_mode = pGPIOHandle->GPIO_PinConfig.GPIO_PinMode;
+	uint8_t pin_number = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+
 	// non IT
-	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG) {
+	if (pin_mode <= GPIO_MODE_ANALOG) {
 		// Mode takes 2 bits, all go consecutively so we can do 2 * pin number
 		mode = pinConfig.GPIO_PinMode << (2 * pinConfig.GPIO_PinNumber);
 
@@ -54,7 +57,43 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 		pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (pinConfig.GPIO_PinNumber * 2));
 		pGPIOHandle->pGPIOx->MODER |= mode;
 	} else {
-		// TODO IT later
+	    // PA0, PB0 etc are connected to EXTI0
+	    // PA1, PB1 etc are connected to EXTI1
+	    // ...
+	    // PA15, PB15 are connected to EXTI15
+	    // Lines 0-15 are for GPIO's
+
+	    volatile uint32_t *FTSR = &EXTI->FTSR1;
+	    volatile uint32_t *RTSR = &EXTI->RTSR1;
+	    volatile uint32_t *IMR = &EXTI->IMR1;
+	    // GPIO => EXTI(Edge detection, interupt delivery) => NVIC(Enable and configure IRQ) => CPU
+	    // IRQ - interupt request
+	    // NVIC - nested vectored interupt controler
+        if (pin_mode == GPIO_MODE_IR_FT) {
+            // Configure falling edge control register (FTSR)
+            *FTSR |= (1 << pin_number);
+            *RTSR &= ~(1 << pin_number); // Reset RTSR just in case
+        } else if (pin_mode == GPIO_MODE_IR_RT) {
+            // Configure rising edge control register (RTSR)
+            *RTSR |= (1 << pin_number);
+            *FTSR &= ~(1 << pin_number); // Reset FTSR just in case
+        } else if (pin_mode == GPIO_MODE_IR_RFT) {
+            // Configure both registers
+            *RTSR |= (1 << pin_number);
+            *FTSR |= (1 << pin_number);
+        }
+
+        // Configure GPIO port in SYSCFG_EXTIR
+        uint8_t index = pin_number / 4;
+        uint8_t offset = pin_number % 4;
+
+        uint8_t portcode = GPIO_ADR_TO_CODE(pGPIOHandle->pGPIOx);
+
+        SYSCFG_PCLK_EN();
+        SYSCFG->EXTICR[index] |= portcode << (offset * 4);
+
+        // Enable EXTI interupt delivery using IMR (Interupt mask register)
+        *IMR |= (1 << pin_number);
 	}
 	// Configure speed
 	uint32_t speed = pinConfig.GPIO_PinSpeed << (2 * pinConfig.GPIO_PinNumber);

@@ -124,6 +124,11 @@ void led_button_toggle() {
     }
 }
 
+void button_it() {
+    while (1) {
+    }
+}
+
 int main(void) {
     led_button_toggle();
 }

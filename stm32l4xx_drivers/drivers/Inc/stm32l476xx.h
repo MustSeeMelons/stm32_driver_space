@@ -5,18 +5,16 @@
 
 #include <stdint.h>
 
-// TODO it think we missed GPIO-I
-
 // General info
 #define FLASH_BASE_ADDR 0x08000000U // 0x080FFFFF - 1023 kB, 1 mB
 #define SRAM1_BASE_ADDR 0x20000000U // 0x2003FFFF - 256kB
 #define SRAM2_BASE_ADDR 0x10000000U // 0x10008000 - 32kBb
 #define SRAM SRAM1_BASE_ADDR
-#define ROM_1 0x1FFF0000 // 0x1FFF 7000 - 28 kB
-#define ROM_2 0x1FFF8000 // 0x1FFF F000 - 28 kB
+#define ROM_1 0x1FFF0000            // 0x1FFF 7000 - 28 kB
+#define ROM_2 0x1FFF8000            // 0x1FFF F000 - 28 kB
 
 // Buses
-#define PERIPH_BASE 0x40000000U
+#define PERIPH_BASE     0x40000000U
 #define APB1_BASE_ADDR  PERIPH_BASE
 #define APB2_BASE_ADDR	0x40010000U
 #define AHB1_BASE_ADDR	0x40020000U
@@ -115,7 +113,35 @@ typedef struct {
 	uint32_t RESERVED7;
 	volatile uint32_t BDCR; // 0x90
 	volatile uint32_t CSR; // 0x94
-} RCC_RegDef;
+} RCC_RegDef_t;
+
+typedef struct {
+    volatile uint32_t IMR1;     // 0x00
+    volatile uint32_t EMR1;     // 0x04
+    volatile uint32_t RTSR1;    // 0x08
+    volatile uint32_t FTSR1;    // 0x0C
+    volatile uint32_t SWIER1;   // 0x10
+    volatile uint32_t PR1;      // 0x14
+    uint32_t RESERVE0;
+    uint32_t RESERVE1;
+    uint32_t RESERVE2;
+    volatile uint32_t IMR2;     // 0x20
+    volatile uint32_t EMR2;     // 0x24
+    volatile uint32_t RTSR2;    // 0x28
+    volatile uint32_t FTSR2;    // 0x2C
+    volatile uint32_t SWIER2;   // 0x30
+    volatile uint32_t PR2;      // 0x34
+} EXTI_RegDef_t;
+
+typedef struct {
+    volatile uint32_t MEMRMP;
+    volatile uint32_t CFGR1;
+    volatile uint32_t EXTICR[4];
+    volatile uint32_t SCSR;
+    volatile uint32_t CFGR2;
+    volatile uint32_t SWPR;
+    volatile uint32_t SKR;
+} SYSCFG_RegDef_t;
 
 #define GPIOA ((GPIO_RegDef_t*)GPIOA_BASE_ADDR)
 #define GPIOB ((GPIO_RegDef_t*)GPIOB_BASE_ADDR)
@@ -126,7 +152,11 @@ typedef struct {
 #define GPIOG ((GPIO_RegDef_t*)GPIOG_BASE_ADDR)
 #define GPIOH ((GPIO_RegDef_t*)GPIOH_BASE_ADDR)
 
-#define RCC ((RCC_RegDef*)RCC_BASE_ADDR)
+#define RCC ((RCC_RegDef_t*)RCC_BASE_ADDR)
+
+#define EXTI ((EXTI_RegDef_t*)EXTI_BASE_ADDR)
+
+#define SYSCFG ((SYSCFG_RegDef_t*)SYSCFG_BASE_ADDR)
 
 // Clock enable macros
 #define GPIOA_PCLK_EN() (RCC->AHB2ENR |= (1 << 0)) // PCLK - peripheral clock
@@ -152,7 +182,6 @@ typedef struct {
 #define UART4_PCLK_EN() (RCC->APB1ENR1 |= (1 << 19))
 #define UART5_PCLK_EN() (RCC->APB1ENR1 |= (1 << 20))
 
-// TODO not sure about this one
 #define SYSCFG_PCLK_EN() (RCC->APB2ENR |= (1 << 0))
 
 // Clock disable macros
@@ -189,6 +218,28 @@ typedef struct {
 #define GPIOF_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 5)); (RCC->AHB2RSTR &= ~(1 << 5)); } while(0)
 #define GPIOG_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 6)); (RCC->AHB2RSTR &= ~(1 << 6)); } while(0)
 #define GPIOH_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 7)); (RCC->AHB2RSTR &= ~(1 << 7)); } while(0)
+
+// IRQ numbers
+#define IRQ_NO_EXTI0 6
+#define IRQ_NO_EXTI1 7
+#define IRQ_NO_EXTI2 8
+#define IRQ_NO_EXTI3 9
+#define IRQ_NO_EXTI4 10
+#define IRQ_NO_EXTI9_5 23
+#define IRQ_NO_EXTI15_10 40
+
+
+// XXX this is ugly, function with a switch would look nicer
+#define GPIO_ADR_TO_CODE(x) ((x == GPIOA) ? 0 :\
+                             (x == GPIOB) ? 1 :\
+                             (x == GPIOC) ? 2 :\
+                             (x == GPIOD) ? 3 :\
+                             (x == GPIOE) ? 4 :\
+                             (x == GPIOF) ? 5 :\
+                             (x == GPIOG) ? 6 :\
+                             (x == GPIOH) ? 7 : 0)
+
+
 
 // Generic macros
 #define ENABLE 			1
