@@ -45,8 +45,8 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 	GPIO_PinConfig_t pinConfig = pGPIOHandle->GPIO_PinConfig;
 	uint32_t mode = 0;
 
-	uint8_t pin_mode = pGPIOHandle->GPIO_PinConfig.GPIO_PinMode;
-	uint8_t pin_number = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber;
+	uint8_t pin_mode = pinConfig.GPIO_PinMode;
+	uint8_t pin_number = pinConfig.GPIO_PinNumber;
 
 	// non IT
 	if (pin_mode <= GPIO_MODE_ANALOG) {
@@ -57,6 +57,10 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
 		pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (pinConfig.GPIO_PinNumber * 2));
 		pGPIOHandle->pGPIOx->MODER |= mode;
 	} else {
+	    // On reset mode will be analog, mode cant be analog for IT to work
+        pGPIOHandle->pGPIOx->MODER &= ~(0x03 << (pinConfig.GPIO_PinNumber * 2));
+        pGPIOHandle->pGPIOx->MODER |= GPIO_MODE_INPUT;
+
 	    // PA0, PB0 etc are connected to EXTI0
 	    // PA1, PB1 etc are connected to EXTI1
 	    // ...
@@ -90,6 +94,7 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle) {
         uint8_t portcode = GPIO_ADR_TO_CODE(pGPIOHandle->pGPIOx);
 
         SYSCFG_PCLK_EN();
+        SYSCFG->EXTICR[index] &= ~(portcode << (offset * 4));
         SYSCFG->EXTICR[index] |= portcode << (offset * 4);
 
         // Enable EXTI interupt delivery using IMR (Interupt mask register)
@@ -164,8 +169,45 @@ void GPIO_TogglePin(GPIO_RegDef_t *pGPIOx, uint8_t pinNumber) {
 	pGPIOx->ODR = pGPIOx->ODR ^ (1 << pinNumber);
 }
 
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t isEnable) {
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable) {
+    if (isEnable == ENABLE) {
+        if (IRQNumber <= 31) {
+            // ISER0
+            *NVIC_ISER0 |= (1 << IRQNumber);
+        } else if (IRQNumber > 32 && IRQNumber < 64) {
+            // ISER1
+            *NVIC_ISER1 |= (1 << (IRQNumber % 32));
+        } else if (IRQNumber >= 64 && IRQNumber < 96) {
+            // ISER2
+            *NVIC_ISER2 |= (1 << IRQNumber % 32);
+        }
+    } else {
+        if (IRQNumber <= 31) {
+            // ICER0
+            *NVIC_ICER0 |= (1 << IRQNumber);
+        } else if (IRQNumber > 32 && IRQNumber < 64) {
+            // ICER1
+            *NVIC_ICER1 |= (1 << (IRQNumber % 32));
+        } else if (IRQNumber >= 64 && IRQNumber < 96) {
+            // ICER2
+            *NVIC_ICER2 |= (1 << (IRQNumber % 32));
+        }
+    }
+}
+
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority) {
+    uint8_t index = IRQNumber / 4;
+    uint8_t offset = IRQNumber % 4;
+
+    // PR lower 4 bits are ignored, thus have to shift prio by 4
+    IRQPriority = IRQPriority << NO_PR_BITS;
+
+    *(NVIC_PR_BASE_ADDR + index) |= IRQPriority << (offset * 8);
 }
 
 void GPIO_IRQHandle(uint8_t pinNumber) {
+    // clear the EXTI PR (pending) register
+    if (EXTI->PR1 & (1 << pinNumber)) {
+        EXTI->PR1 |= (1 << pinNumber);
+    }
 }

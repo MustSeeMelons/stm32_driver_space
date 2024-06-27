@@ -25,6 +25,11 @@
 //  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 //#endif
 
+void delay(uint32_t time) {
+    for (uint32_t i = 0; i < time; i++)
+        ;
+}
+
 void led_push_pull() {
     // Setup GPIO
     GPIO_Handle_t gpio_handle = { .pGPIOx = GPIOA, .GPIO_PinConfig = {
@@ -125,10 +130,52 @@ void led_button_toggle() {
 }
 
 void button_it() {
-    while (1) {
-    }
+    GPIO_Handle_t led_handle = {
+        .pGPIOx = GPIOA,
+        .GPIO_PinConfig = {
+            .GPIO_PinNumber = GPIO_PIN_N5,
+            .GPIO_PinMode = GPIO_MODE_OUTPUT,
+            .GPIO_PinSpeed = GPIO_SPEED_FAST,
+            .GPIO_PinPuPdControl = GPIO_NO_PUPD,
+            .GPIO_PinOPType = GPIO_OP_TYPE_PP,
+            .GPIO_PinAltFunMode = 0
+        }
+    };
+
+    GPIO_Handle_t gpio_it = {
+        .pGPIOx = GPIOC,
+        .GPIO_PinConfig = {
+            .GPIO_PinNumber = GPIO_PIN_N2,
+            .GPIO_PinMode = GPIO_MODE_IR_FT,
+            .GPIO_PinSpeed = GPIO_SPEED_FAST,
+            .GPIO_PinPuPdControl = GPIO_PIN_PU,
+            .GPIO_PinOPType = GPIO_OP_TYPE_PP,
+            .GPIO_PinAltFunMode = 0
+        }
+    };
+
+    // Enable clock for port A
+    GPIO_PCLK(GPIOA, ENABLE);
+    GPIO_PCLK(GPIOC, ENABLE);
+
+    GPIO_Init(&led_handle);
+    GPIO_Init(&gpio_it);
+
+    GPIO_IRQPriorityConfig(IRQ_NO_EXTI2, NVIC_IRQ_PRI15);
+    GPIO_IRQInterruptConfig(IRQ_NO_EXTI2, ENABLE);
+
+
+    while (1)
+        ;
+}
+
+void EXTI2_IRQHandler(void) {
+    // XXX delay shot not be here, should set a flag & checked in main loop
+    delay(50000);
+    GPIO_IRQHandle(GPIO_PIN_N2);
+    GPIO_TogglePin(GPIOA, GPIO_PIN_N5);
 }
 
 int main(void) {
-    led_button_toggle();
+    button_it();
 }

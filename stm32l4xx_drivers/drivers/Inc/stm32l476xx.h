@@ -1,9 +1,24 @@
 #ifndef INC_STM32L476XX_H_
 #define INC_STM32L476XX_H_
 
-#define __vo volatile
-
 #include <stdint.h>
+
+// XXX enums in place of these defines?
+
+// ARM Cortex
+#define NVIC_ISER0  ((volatile uint32_t*)0xE000E100)
+#define NVIC_ISER1  ((volatile uint32_t*)0xE000E104)
+#define NVIC_ISER2  ((volatile uint32_t*)0xE000E108)
+#define NVIC_ISER3  ((volatile uint32_t*)0xE000E10C)
+
+#define NVIC_ICER0  ((volatile uint32_t*)0XE000E180)
+#define NVIC_ICER1  ((volatile uint32_t*)0XE000E184)
+#define NVIC_ICER2  ((volatile uint32_t*)0XE000E188)
+#define NVIC_ICER3  ((volatile uint32_t*)0XE000E18C)
+
+#define NVIC_PR_BASE_ADDR   ((volatile uint32_t*)0xE000E400)
+
+#define NO_PR_BITS 4
 
 // General info
 #define FLASH_BASE_ADDR 0x08000000U // 0x080FFFFF - 1023 kB, 1 mB
@@ -220,14 +235,15 @@ typedef struct {
 #define GPIOH_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 7)); (RCC->AHB2RSTR &= ~(1 << 7)); } while(0)
 
 // IRQ numbers
-#define IRQ_NO_EXTI0 6
-#define IRQ_NO_EXTI1 7
-#define IRQ_NO_EXTI2 8
-#define IRQ_NO_EXTI3 9
-#define IRQ_NO_EXTI4 10
-#define IRQ_NO_EXTI9_5 23
-#define IRQ_NO_EXTI15_10 40
+#define IRQ_NO_EXTI0        6
+#define IRQ_NO_EXTI1        7
+#define IRQ_NO_EXTI2        8
+#define IRQ_NO_EXTI3        9
+#define IRQ_NO_EXTI4        10
+#define IRQ_NO_EXTI9_5      23
+#define IRQ_NO_EXTI15_10    40
 
+#define NVIC_IRQ_PRI15     15
 
 // XXX this is ugly, function with a switch would look nicer
 #define GPIO_ADR_TO_CODE(x) ((x == GPIOA) ? 0 :\
@@ -238,8 +254,6 @@ typedef struct {
                              (x == GPIOF) ? 5 :\
                              (x == GPIOG) ? 6 :\
                              (x == GPIOH) ? 7 : 0)
-
-
 
 // Generic macros
 #define ENABLE 			1

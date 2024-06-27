@@ -72,7 +72,8 @@ void GPIO_WriteToOutputPort(GPIO_RegDef_t *pGPIOx, uint16_t value);
 
 void GPIO_TogglePin(GPIO_RegDef_t *pGPIOx, uint8_t pinNumber);
 
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t isEnable);
+void GPIO_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable);
+void GPIO_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
 void GPIO_IRQHandle(uint8_t pinNumber);
 
 #endif /* INC_STM32L476XX_GPIO_DRIVER_H_ */
