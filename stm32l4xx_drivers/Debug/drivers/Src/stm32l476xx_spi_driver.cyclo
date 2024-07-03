@@ -1,0 +1,12 @@
+../drivers/Src/stm32l476xx_spi_driver.c:3:6:SPI_PCLK	8
+../drivers/Src/stm32l476xx_spi_driver.c:23:6:SPI_Init	9
+../drivers/Src/stm32l476xx_spi_driver.c:92:6:SPI_DeInit	4
+../drivers/Src/stm32l476xx_spi_driver.c:102:9:SPI_GetFlagStatus	2
+../drivers/Src/stm32l476xx_spi_driver.c:110:6:SPI_SendData	5
+../drivers/Src/stm32l476xx_spi_driver.c:142:6:SPI_ReceiveData	1
+../drivers/Src/stm32l476xx_spi_driver.c:144:6:SPI_IRQInterruptConfig	1
+../drivers/Src/stm32l476xx_spi_driver.c:145:6:SPI_IRQPriorityConfig	1
+../drivers/Src/stm32l476xx_spi_driver.c:146:6:SPI_IRQHandle	1
+../drivers/Src/stm32l476xx_spi_driver.c:148:6:SPI_Enable	2
+../drivers/Src/stm32l476xx_spi_driver.c:160:6:SPI_SSIConfig	2
+../drivers/Src/stm32l476xx_spi_driver.c:168:6:SPI_SSOEConfig	2

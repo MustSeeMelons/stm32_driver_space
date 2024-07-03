@@ -88,6 +88,17 @@ typedef struct {
 
 } GPIO_RegDef_t;
 
+// 42.6.8
+typedef struct {
+    volatile uint32_t CR1;      // 0x00, control register 1
+    volatile uint32_t CR2;      // 0x04, control register 2
+    volatile uint32_t SR;       // 0x08, status register, various flags
+    volatile uint32_t DR;       // 0x0C, data register
+    volatile uint32_t CRCPR;    // 0x10, CRC polynomial register
+    volatile uint32_t RXCRCR;   // 0x14, CRC of received bytes
+    volatile uint32_t TXCRCR;   // 0x18, CRC of transmited bytes
+} SPI_RegDef_t;
+
 // RCC register map
 typedef struct {
 	volatile uint32_t CR; // 0x00
@@ -167,6 +178,10 @@ typedef struct {
 #define GPIOG ((GPIO_RegDef_t*)GPIOG_BASE_ADDR)
 #define GPIOH ((GPIO_RegDef_t*)GPIOH_BASE_ADDR)
 
+#define SPI1 ((SPI_RegDef_t*)SPI1_BASE_ADDR)
+#define SPI2 ((SPI_RegDef_t*)SPI2_BASE_ADDR)
+#define SPI3 ((SPI_RegDef_t*)SPI3_BASE_ADDR)
+
 #define RCC ((RCC_RegDef_t*)RCC_BASE_ADDR)
 
 #define EXTI ((EXTI_RegDef_t*)EXTI_BASE_ADDR)
@@ -234,6 +249,9 @@ typedef struct {
 #define GPIOG_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 6)); (RCC->AHB2RSTR &= ~(1 << 6)); } while(0)
 #define GPIOH_REG_RESET() do { (RCC->AHB2RSTR |= (1 << 7)); (RCC->AHB2RSTR &= ~(1 << 7)); } while(0)
 
+#define SPI1_REG_RESET() do {(RCC->APB2RSTR |= (1 << 12)); (RCC->APB2RSTR &= ~(1 << 12));} while(0)
+#define SPI2_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 12)); (RCC->APB1RSTR1 &= ~(1 << 12));} while(0)
+#define SPI3_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 12)); (RCC->APB1RSTR1 &= ~(1 << 12));} while(0)
 // IRQ numbers
 #define IRQ_NO_EXTI0        6
 #define IRQ_NO_EXTI1        7
@@ -246,6 +264,7 @@ typedef struct {
 #define NVIC_IRQ_PRI15     15
 
 // XXX this is ugly, function with a switch would look nicer
+// Returns the port code depending on address
 #define GPIO_ADR_TO_CODE(x) ((x == GPIOA) ? 0 :\
                              (x == GPIOB) ? 1 :\
                              (x == GPIOC) ? 2 :\
@@ -262,5 +281,32 @@ typedef struct {
 #define RESET 			DISABLE
 #define GPIO_PIN_SET 	SET
 #define GPIO_PIN_RESET 	RESET
+#define FLAG_RESET      RESET
+#define FLAG_SET        SET
+
+#define SPI_CR1_CPHA        0
+#define SPI_CR1_CPOL        1
+#define SPI_CR1_MSTR        2
+#define SPI_CR1_BR          3
+#define SPI_CR1_SPE         6
+#define SPI_CR1_SSI         8
+#define SPI_CR1_SSM         9
+#define SPI_CR1_RXONLY      10
+#define SPI_CR1_BIDIMODE    15
+
+#define SPI_CR2_DS          8
+#define SPI_CR2_SSOE        2
+
+#define SPI_SR_RXNE     0  // Receive buffer not empty
+#define SPI_SR_TXE      1  // Transmit buffer empty
+#define SPI_SR_CRCE_RR  4  // CRC error flag
+#define SPI_SR_MODF     5  // Mode fault
+#define SPI_SR_OVR      6  // Overrun flag
+#define SPI_SR_BSY      7  // Busy flag
+#define SPI_SR_FRE      8  // Frame format error
+#define SPI_SR_FRLVL    9  // FIFO reception level
+#define SPI_SR_FTLVL    11 // FIFO transmission leve
+
+
 
 #endif /* INC_STM32L476XX_H_ */

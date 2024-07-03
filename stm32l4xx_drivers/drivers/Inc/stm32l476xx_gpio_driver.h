@@ -59,6 +59,13 @@ typedef struct {
 #define GPIO_PIN_N14	14
 #define GPIO_PIN_N15	15
 
+#define GPIO_AF_0   0
+#define GPIO_AF_1   1
+#define GPIO_AF_2   2
+#define GPIO_AF_3   3
+#define GPIO_AF_4   4
+#define GPIO_AF_5   5
+
 void GPIO_PCLK(GPIO_RegDef_t *pGPIOx, uint8_t isEnable);
 
 void GPIO_Init(GPIO_Handle_t *pGPIOHandle);

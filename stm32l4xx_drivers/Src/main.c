@@ -19,6 +19,8 @@
 #include <stdint.h>
 #include "stm32l476xx.h"
 #include "stm32l476xx_gpio_driver.h"
+#include "stm32l476xx_spi_driver.h"
+
 
 // XXX why was this generated?
 //#if !defined(__SOFT_FP__) && defined(__ARM_FP)
@@ -32,10 +34,16 @@ void delay(uint32_t time) {
 
 void led_push_pull() {
     // Setup GPIO
-    GPIO_Handle_t gpio_handle = { .pGPIOx = GPIOA, .GPIO_PinConfig = {
-            .GPIO_PinNumber = GPIO_PIN_N5, .GPIO_PinMode = GPIO_MODE_OUTPUT,
-            .GPIO_PinSpeed = GPIO_SPEED_FAST, .GPIO_PinPuPdControl =
-                    GPIO_NO_PUPD, .GPIO_PinOPType = GPIO_OP_TYPE_PP, } };
+    GPIO_Handle_t gpio_handle = {
+            .pGPIOx = GPIOA,
+            .GPIO_PinConfig = {
+                    .GPIO_PinNumber = GPIO_PIN_N5,
+                    .GPIO_PinMode = GPIO_MODE_OUTPUT,
+                    .GPIO_PinSpeed = GPIO_SPEED_FAST,
+                    .GPIO_PinPuPdControl = GPIO_NO_PUPD,
+                    .GPIO_PinOPType = GPIO_OP_TYPE_PP,
+            }
+    };
 
     // Enable clock for port A
     GPIO_PCLK(GPIOA, ENABLE);
