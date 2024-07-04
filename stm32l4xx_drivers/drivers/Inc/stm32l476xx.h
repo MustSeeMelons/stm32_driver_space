@@ -296,6 +296,7 @@ typedef struct {
 
 #define SPI_CR2_DS          8
 #define SPI_CR2_SSOE        2
+#define SPI_CR2_FRXTH       12
 
 #define SPI_SR_RXNE     0  // Receive buffer not empty
 #define SPI_SR_TXE      1  // Transmit buffer empty

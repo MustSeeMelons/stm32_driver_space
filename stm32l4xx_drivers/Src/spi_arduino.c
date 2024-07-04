@@ -4,8 +4,6 @@
 #include "stm32l476xx_gpio_driver.h"
 #include "stm32l476xx_spi_driver.h"
 
-uint8_t is_trigger = 0;
-
 void delay(uint32_t time) {
     for (uint32_t i = 0; i < time; i++)
         ;
@@ -57,7 +55,7 @@ void SPI_GPIO_Setup() {
         .pGPIOx = GPIOC,
         .GPIO_PinConfig = {
             .GPIO_PinNumber = GPIO_PIN_N2,
-            .GPIO_PinMode = GPIO_MODE_IR_FT,
+            .GPIO_PinMode = GPIO_MODE_INPUT,
             .GPIO_PinSpeed = GPIO_SPEED_FAST,
             .GPIO_PinPuPdControl = GPIO_PIN_PU,
             .GPIO_PinOPType = GPIO_OP_TYPE_PP,
@@ -71,11 +69,9 @@ void SPI_GPIO_Setup() {
 }
 
 void spi_send() {
-    char msg[] = "hello world";
+    char msg[] = "howdy partner";
 
     SPI_GPIO_Setup();
-
-    GPIO_IRQInterruptConfig(IRQ_NO_EXTI2, ENABLE);
 
     SPI_Handle_t spi_handle = {
         .pSPIx = SPI2,
@@ -94,28 +90,31 @@ void spi_send() {
 
     SPI_SSOEConfig(spi_handle.pSPIx, ENABLE);
 
+    uint8_t is_down = 0;
+
     while (1) {
-        if (is_trigger == 1) {
+        uint8_t button_state = GPIO_ReadFromInputPin(GPIOC, GPIO_PIN_N2);
+
+        if (button_state == 0 && is_down == 0) {
+            is_down = 1;
+            delay(10000);
             SPI_Enable(spi_handle.pSPIx, ENABLE);
 
-            // TODO add msg length to data
+            uint8_t str_len = strlen(msg);
 
-            SPI_SendData(spi_handle.pSPIx, strlen(msg), 1);
-            SPI_SendData(spi_handle.pSPIx, (uint8_t*) msg, strlen(msg));
+            SPI_SendData(spi_handle.pSPIx, &str_len, 1);
 
-            // Wait for busy flag to clear
-            while(spi_handle.pSPIx->SR & 0x1 << SPI_SR_BSY);
+            SPI_SendData(spi_handle.pSPIx, (uint8_t*) msg, str_len);
+
+            // 1 for busy, Wait for busy flag to clear
+            while (spi_handle.pSPIx->SR & (0x1 << SPI_SR_BSY))
+                ;
 
             SPI_Enable(spi_handle.pSPIx, DISABLE);
-            is_trigger = 0;
+        } else if (button_state == 1) {
+            is_down = 0;
         }
     }
-}
-
-void EXTI2_IRQHandler(void) {
-    is_trigger = 1;
-
-    GPIO_IRQHandle(GPIO_PIN_N2);
 }
 
 int main(void) {

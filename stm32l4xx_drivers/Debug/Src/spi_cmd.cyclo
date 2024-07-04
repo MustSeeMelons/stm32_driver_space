@@ -1,0 +1,10 @@
+../Src/spi_cmd.c:38:6:delay	2
+../Src/spi_cmd.c:43:6:SPI_GPIO_Setup	1
+../Src/spi_cmd.c:91:9:SPI_VerifyResponse	1
+../Src/spi_cmd.c:101:6:process_led_toggle	3
+../Src/spi_cmd.c:129:6:process_sensor_read	3
+../Src/spi_cmd.c:168:6:process_led_read	2
+../Src/spi_cmd.c:203:6:process_print	1
+../Src/spi_cmd.c:205:6:process_id_read	3
+../Src/spi_cmd.c:238:6:spi_send	9
+../Src/spi_cmd.c:301:5:main	1

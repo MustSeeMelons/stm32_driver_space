@@ -1,4 +1,4 @@
-"./Src/spi_arduino.o"
+"./Src/spi_cmd.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
 "./Startup/startup_stm32l476rgtx.o"
