@@ -1,4 +1,4 @@
-"./Src/spi_cmd.o"
+"./Src/009spi_message_rcv_it.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
 "./Startup/startup_stm32l476rgtx.o"

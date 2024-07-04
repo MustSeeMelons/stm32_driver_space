@@ -2,6 +2,15 @@
 #define INC_STM32L476XX_SPI_DRIVER_H_
 
 #include "stm32l476xx.h"
+#include "stddef.h"
+
+#define SPI_READY   0
+#define SPI_BUSY_RX 1
+#define SPI_BUSY_TX 2
+
+#define SPI_EVENT_TX_COMPLETE   1
+#define SPI_EVENT_RX_COMPLETE   2
+#define SPI_EVENT_OVR_ERR       3
 
 typedef struct {
     uint8_t SPI_DeviceMode; // Master/Slave
@@ -16,6 +25,12 @@ typedef struct {
 typedef struct {
     SPI_RegDef_t *pSPIx;
     SPI_Config_t SPIConfig;
+    uint8_t *pTxBuffer;
+    uint8_t *pRxBuffer;
+    uint32_t txLen;
+    uint32_t rxLen;
+    uint8_t txState;
+    uint8_t rxState;
 } SPI_Handle_t;
 
 #define SPI_DEVICE_MODE_MASTER  1
@@ -51,6 +66,8 @@ typedef struct {
 #define SPI_RXNE_FLAG (1 << SPI_SR_RXNE)
 #define SPI_BSY_FLAG (1 << SPI_SR_BSY)
 
+uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint32_t flagMask);
+
 void SPI_PCLK(SPI_RegDef_t *pSPIx, uint8_t isEnable);
 
 void SPI_Init(SPI_Handle_t *pSPIHandle);
@@ -58,6 +75,9 @@ void SPI_DeInit(SPI_RegDef_t *pSPIx);
 
 void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *source, uint32_t size);
 void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *destination, uint32_t size);
+
+uint8_t SPI_SendDataIT(SPI_Handle_t *pHandle, uint8_t *source, uint32_t size);
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pHandle, uint8_t *destination, uint32_t size);
 
 void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable);
 void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
@@ -68,5 +88,11 @@ void SPI_Enable(SPI_RegDef_t *pSPIx, uint8_t isEnable);
 void SPI_SSIConfig(SPI_RegDef_t *pSPIx, uint8_t isEnable);
 
 void SPI_SSOEConfig(SPI_RegDef_t *pSPIx, uint8_t isEnable);
+
+void SPI_ClearOVR(SPI_Handle_t *pHandle);
+void SPI_CloseTransmission(SPI_Handle_t *pHandle);
+void SPI_CloseReception(SPI_Handle_t *pHandle);
+
+void SPI_AppEventCallback(SPI_Handle_t *pHandle, uint8_t event);
 
 #endif /* INC_STM32L476XX_SPI_DRIVER_H_ */

@@ -261,6 +261,10 @@ typedef struct {
 #define IRQ_NO_EXTI9_5      23
 #define IRQ_NO_EXTI15_10    40
 
+#define IRQ_NO_SPI1         35
+#define IRQ_NO_SPI2         36
+#define IRQ_NO_SPI3         51
+
 #define NVIC_IRQ_PRI15     15
 
 // XXX this is ugly, function with a switch would look nicer
@@ -298,6 +302,10 @@ typedef struct {
 #define SPI_CR2_SSOE        2
 #define SPI_CR2_FRXTH       12
 
+#define SPI_CR2_ERRIE       5
+#define SPI_CR2_RXNEIE      6
+#define SPI_CR2_TXEIE       7
+
 #define SPI_SR_RXNE     0  // Receive buffer not empty
 #define SPI_SR_TXE      1  // Transmit buffer empty
 #define SPI_SR_CRCE_RR  4  // CRC error flag
@@ -307,7 +315,5 @@ typedef struct {
 #define SPI_SR_FRE      8  // Frame format error
 #define SPI_SR_FRLVL    9  // FIFO reception level
 #define SPI_SR_FTLVL    11 // FIFO transmission leve
-
-
 
 #endif /* INC_STM32L476XX_H_ */

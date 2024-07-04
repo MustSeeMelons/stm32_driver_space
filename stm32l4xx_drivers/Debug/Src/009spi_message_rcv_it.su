@@ -1,0 +1,8 @@
+../Src/009spi_message_rcv_it.c:36:6:delay	16	static
+../Src/009spi_message_rcv_it.c:49:6:SPI2_GPIOInits	24	static
+../Src/009spi_message_rcv_it.c:80:6:SPI2_Inits	8	static
+../Src/009spi_message_rcv_it.c:96:6:Slave_GPIO_InterruptPinInit	24	static
+../Src/009spi_message_rcv_it.c:116:5:main	16	static
+../Src/009spi_message_rcv_it.c:179:6:SPI2_IRQHandler	8	static
+../Src/009spi_message_rcv_it.c:186:6:SPI_ApplicationEventCallback	16	static
+../Src/009spi_message_rcv_it.c:203:6:EXTI9_5_IRQHandler	8	static

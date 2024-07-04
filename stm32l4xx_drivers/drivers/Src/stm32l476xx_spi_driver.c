@@ -162,9 +162,41 @@ void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *destination, uint32_t size) {
     }
 }
 
-void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable) {}
-void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority) {}
-void SPI_IRQHandle(SPI_Handle_t *pHandle) {}
+void SPI_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable) {
+    if (isEnable == ENABLE) {
+        if (IRQNumber <= 31) {
+            // ISER0
+            *NVIC_ISER0 |= (1 << IRQNumber);
+        } else if (IRQNumber > 32 && IRQNumber < 64) {
+            // ISER1
+            *NVIC_ISER1 |= (1 << (IRQNumber % 32));
+        } else if (IRQNumber >= 64 && IRQNumber < 96) {
+            // ISER2
+            *NVIC_ISER2 |= (1 << IRQNumber % 32);
+        }
+    } else {
+        if (IRQNumber <= 31) {
+            // ICER0
+            *NVIC_ICER0 |= (1 << IRQNumber);
+        } else if (IRQNumber > 32 && IRQNumber < 64) {
+            // ICER1
+            *NVIC_ICER1 |= (1 << (IRQNumber % 32));
+        } else if (IRQNumber >= 64 && IRQNumber < 96) {
+            // ICER2
+            *NVIC_ICER2 |= (1 << (IRQNumber % 32));
+        }
+    }
+}
+
+void SPI_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority) {
+    uint8_t index = IRQNumber / 4;
+    uint8_t offset = IRQNumber % 4;
+
+    // PR lower 4 bits are ignored, thus have to shift prio by 4
+    IRQPriority = IRQPriority << NO_PR_BITS;
+
+    *(NVIC_PR_BASE_ADDR + index) |= IRQPriority << (offset * 8);
+}
 
 void SPI_Enable(SPI_RegDef_t *pSPIx, uint8_t isEnable) {
     // SSM == 0, SPE == 1 => NSS LOW when SPE == 1
@@ -194,4 +226,137 @@ void SPI_SSOEConfig(SPI_RegDef_t *pSPIx, uint8_t isEnable) {
     } else {
         pSPIx->CR2 &= ~(1 << SPI_CR2_SSOE);
     }
+}
+
+uint8_t SPI_SendDataIT(SPI_Handle_t *pHandle, uint8_t *source, uint32_t size) {
+    if (pHandle->txState != SPI_BUSY_TX) {
+        // Saver buffer
+        pHandle->pTxBuffer = source;
+        // Save length
+        pHandle->txLen = size;
+        // Mark SPI as busy
+        pHandle->txState = SPI_BUSY_TX;
+        // Enable TX IT
+        pHandle->pSPIx->CR2 |= (1 << SPI_CR2_TXEIE);
+        // Handle transmission ir ISR
+    }
+
+    return pHandle->txState;
+}
+
+uint8_t SPI_ReceiveDataIT(SPI_Handle_t *pHandle, uint8_t *destination, uint32_t size) {
+    if (pHandle->rxState != SPI_BUSY_RX) {
+        // Saver buffer
+        pHandle->pRxBuffer = destination;
+        // Save length
+        pHandle->rxLen = size;
+        // Mark SPI as busy
+        pHandle->rxState = SPI_BUSY_RX;
+        // Enable TX IT
+        pHandle->pSPIx->CR2 |= (1 << SPI_CR2_RXNEIE);
+        // Handle transmission ir ISR
+    }
+
+    return pHandle->rxState;
+}
+
+static void spi_txe_it_handler(SPI_Handle_t *pHandle) {
+    uint16_t is_16 = (pHandle->pSPIx->CR2 >> SPI_CR2_DS & 0xF) == 0xF;
+
+    uint8_t *source = pHandle->pTxBuffer;
+
+    // Place a single or two bytes in the data register
+    if (is_16) {
+        pHandle->pSPIx->DR = *((uint16_t*) source);
+        (uint16_t*) source++;
+        pHandle->txLen -= 2;
+    } else {
+        *((volatile uint8_t*) &pHandle->pSPIx->DR) = *source;
+        source++;
+        pHandle->txLen--;
+    }
+
+    pHandle->pTxBuffer = source;
+
+    if (!pHandle->rxLen) {
+        SPI_CloseTransmission(pHandle);
+
+        SPI_AppEventCallback(pHandle, SPI_EVENT_TX_COMPLETE);
+    }
+}
+
+static void spi_rxe_it_handler(SPI_Handle_t *pHandle) {
+    uint16_t is_16 = (pHandle->pSPIx->CR2 >> SPI_CR2_DS & 0xF) == 0xF;
+
+    if (is_16) {
+        *((uint16_t*) pHandle->pRxBuffer) = (uint16_t) pHandle->pSPIx->DR;
+        (uint16_t*) pHandle->pRxBuffer++;
+        pHandle->rxState -= 2;
+    } else {
+        *pHandle->pRxBuffer = (uint8_t) pHandle->pSPIx->DR;
+        pHandle->pRxBuffer++;
+        pHandle->rxState--;
+    }
+
+    if (!pHandle->rxLen) {
+        SPI_CloseReception(pHandle);
+
+        SPI_AppEventCallback(pHandle, SPI_EVENT_RX_COMPLETE);
+    }
+}
+
+static void spi_err_it_handler(SPI_Handle_t *pHandle) {
+    if (pHandle->txState != SPI_BUSY_TX) {
+        SPI_ClearOVR(pHandle);
+    }
+
+    SPI_AppEventCallback(pHandle, SPI_EVENT_OVR_ERR);
+}
+
+void SPI_IRQHandle(SPI_Handle_t *pHandle) {
+    uint8_t tx_flag = pHandle->pSPIx->SR & (1 << SPI_SR_TXE);
+    uint8_t tx_it_flag = pHandle->pSPIx->CR2 & (1 << SPI_CR2_TXEIE);
+
+    if (tx_flag && tx_it_flag) {
+        spi_txe_it_handler(pHandle);
+    }
+
+    uint8_t rx_flag = pHandle->pSPIx->SR & (1 << SPI_SR_RXNE);
+    uint8_t rx_it_flag = pHandle->pSPIx->CR2 & (1 << SPI_CR2_RXNEIE);
+
+    if (rx_flag && rx_it_flag) {
+        spi_rxe_it_handler(pHandle);
+    }
+
+    uint8_t ovr_flag = pHandle->pSPIx->SR & (1 << SPI_SR_OVR);
+    uint8_t err_it_flag = pHandle->pSPIx->CR2 & (1 << SPI_CR2_ERRIE);
+
+    if (ovr_flag && err_it_flag) {
+        spi_err_it_handler(pHandle);
+    }
+}
+
+void SPI_ClearOVR(SPI_Handle_t *pHandle) {
+    uint8_t d;
+    d = pHandle->pSPIx->DR;
+    d = pHandle->pSPIx->SR;
+    (void) d; // it is "used" now
+}
+
+void SPI_CloseTransmission(SPI_Handle_t *pHandle) {
+    pHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_TXEIE);
+    pHandle->pTxBuffer = NULL;
+    pHandle->txLen = 0;
+    pHandle->txState = SPI_READY;
+}
+
+void SPI_CloseReception(SPI_Handle_t *pHandle) {
+    pHandle->pSPIx->CR2 &= ~(1 << SPI_CR2_RXNEIE);
+    pHandle->pRxBuffer = NULL;
+    pHandle->rxLen = 0;
+    pHandle->rxState = SPI_READY;
+}
+
+__attribute__((weak)) void SPI_AppEventCallback(SPI_Handle_t *pHandle, uint8_t event) {
+    // Override me
 }
