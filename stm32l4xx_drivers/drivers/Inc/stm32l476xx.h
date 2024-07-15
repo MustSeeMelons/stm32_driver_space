@@ -88,7 +88,7 @@ typedef struct {
 
 } GPIO_RegDef_t;
 
-// 42.6.8
+// SPI register map 42.6.8
 typedef struct {
     volatile uint32_t CR1;      // 0x00, control register 1
     volatile uint32_t CR2;      // 0x04, control register 2
@@ -98,6 +98,21 @@ typedef struct {
     volatile uint32_t RXCRCR;   // 0x14, CRC of received bytes
     volatile uint32_t TXCRCR;   // 0x18, CRC of transmited bytes
 } SPI_RegDef_t;
+
+// I2C register map 39.9.12
+typedef struct {
+    volatile uint32_t CR1;      // 0x00, control register 1
+    volatile uint32_t CR2;      // 0x04, control register 2
+    volatile uint32_t OAR1;     // 0x08, own address register
+    volatile uint32_t OAR2;     // 0x0C, own address register
+    volatile uint32_t TIMINGR;  // 0x10, timing register
+    volatile uint32_t TIMEOUTR; // 0x14, timeout register
+    volatile uint32_t ISR;      // 0x18, interupt and status register
+    volatile uint32_t ICR;      // 0x1C, interupt clear register
+    volatile uint32_t PECR;     // 0x20, packet error checking register
+    volatile uint32_t RXDR;     // 0x24, recieve data register
+    volatile uint32_t TXDR;     // 0x28, transmit data register
+} I2C_RegDef_t;
 
 // RCC register map
 typedef struct {
@@ -182,6 +197,10 @@ typedef struct {
 #define SPI2 ((SPI_RegDef_t*)SPI2_BASE_ADDR)
 #define SPI3 ((SPI_RegDef_t*)SPI3_BASE_ADDR)
 
+#define I2C1 ((I2C_RegDef_t*)I2C1_BASE_ADDR)
+#define I2C2 ((I2C_RegDef_t*)I2C2_BASE_ADDR)
+#define I2C3 ((I2C_RegDef_t*)I2C3_BASE_ADDR)
+
 #define RCC ((RCC_RegDef_t*)RCC_BASE_ADDR)
 
 #define EXTI ((EXTI_RegDef_t*)EXTI_BASE_ADDR)
@@ -252,6 +271,11 @@ typedef struct {
 #define SPI1_REG_RESET() do {(RCC->APB2RSTR |= (1 << 12)); (RCC->APB2RSTR &= ~(1 << 12));} while(0)
 #define SPI2_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 12)); (RCC->APB1RSTR1 &= ~(1 << 12));} while(0)
 #define SPI3_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 12)); (RCC->APB1RSTR1 &= ~(1 << 12));} while(0)
+
+#define I2C1_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 21)); (RCC->APB1RSTR1 &= ~(1 << 21));} while(0)
+#define I2C2_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 22)); (RCC->APB1RSTR1 &= ~(1 << 22));} while(0)
+#define I2C3_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 23)); (RCC->APB1RSTR1 &= ~(1 << 23));} while(0)
+
 // IRQ numbers
 #define IRQ_NO_EXTI0        6
 #define IRQ_NO_EXTI1        7
@@ -264,6 +288,13 @@ typedef struct {
 #define IRQ_NO_SPI1         35
 #define IRQ_NO_SPI2         36
 #define IRQ_NO_SPI3         51
+
+#define IRQ_NO_I2C1_EVENT   31
+#define IRQ_NO_I2C1_ERROR   32
+#define IRQ_NO_I2C2_EVENT   33
+#define IRQ_NO_I2C2_ERROR   34
+#define IRQ_NO_I2C3_EVNET   72
+#define IRQ_NO_I2C3_ERROR   73
 
 #define NVIC_IRQ_PRI15     15
 
@@ -288,6 +319,7 @@ typedef struct {
 #define FLAG_RESET      RESET
 #define FLAG_SET        SET
 
+// SPI bit positions
 #define SPI_CR1_CPHA        0
 #define SPI_CR1_CPOL        1
 #define SPI_CR1_MSTR        2
@@ -315,5 +347,70 @@ typedef struct {
 #define SPI_SR_FRE      8  // Frame format error
 #define SPI_SR_FRLVL    9  // FIFO reception level
 #define SPI_SR_FTLVL    11 // FIFO transmission leve
+
+// I2C bit positions
+#define I2C_CR1_PE          0
+#define I2C_CR1_TXIE        1
+#define I2C_CR1_RXIE        2
+#define I2C_CR1_ADDRIE      3
+#define I2C_CR1_NACKIE      4
+#define I2C_CR1_STOPIE      5
+#define I2C_CR1_TCIE        6
+#define I2C_CR1_ERRIE       7
+#define I2C_CR1_DNF         8
+#define I2C_CR1_ANFOFF      12
+#define I2C_CR1_TXDMAEN     14
+#define I2C_CR1_RXDMAEN     15
+#define I2C_CR1_SBC         16
+#define I2C_CR1_NOSTRETCH   17
+#define I2C_CR1_WUPEN       18
+#define I2C_CR1_GCEN        19
+#define I2C_CR1_SMBHEN      20
+#define I2C_CR1_SMBDEN      21
+#define I2C_CR1_ALERTEN     22
+#define I2C_CR1_PECEN       23
+
+#define I2C_CR2_SADD    0   // Slave address [7:1] bits for 7-bit
+#define I2C_CR2_RD_WRN  10
+#define I2C_CR2_ADD10   11
+#define I2C_CR2_HEAD10R 12
+#define I2C_CR2_START   13
+#define I2C_CR2_STOP    14
+#define I2C_CR2_NACK    15
+#define I2C_CR2_NBYTES  16 // Number of bytes to be transmitted/recieved
+#define I2C_CR2_RELOAD  24
+#define I2C_CR2_AUTOEND 25
+#define I2C_CR2_PECBYTE 26
+
+#define I2C_ISR_TXE     0
+#define I2C_ISR_TXIS    1 // Set to 1 if TXDR is empty
+#define I2C_ISR_RXNE    2
+#define I2C_ISR_ADDR    3
+#define I2C_ISR_NACKF   4
+#define I2C_ISR_STOPF   5
+#define I2C_ISR_TC      6
+#define I2C_ISR_TCR     8
+#define I2C_ISR_BERR    8
+#define I2C_ISR_ARLO    9
+#define I2C_ISR_OVR     10
+#define I2C_ISR_PEC_ERR 11
+#define I2C_ISR_TIMEOUT 12
+#define I2C_ISR_ALERT   13
+#define I2C_ISR_BUSY    15
+#define I2C_ISR_DIR     16
+#define I2C_ISR_ADDCODE 17
+
+#define I2C_OA1_EN 15
+
+#define I2C_TIMINGR_SCLL    0  // SCL Low Period. tSCLL = (SCLL + 1) * tPRESC
+#define I2C_TIMINGR_SCLH    8  // SCL High Period. tSCLH = (SCLH + 1) * tPRESC
+#define I2C_TIMINGR_SDADEL  16 // Data hold time. Delay betweeen SCL falling and SDA edge. tSDADEL = SDADEL * tPRESC
+#define I2C_TIMINGR_SCLDEL  20 // Data setup time. tSCLDEL = (SCLDEL + 1) * tPRESC. Delay between SDA edge and SCL rising edge,
+#define I2C_TIMINGR_PRESC   28 // Timing prescaler. tPRESC = (PRESC + 1) * tI2CCLK.
+
+#define RCC_CR_MSIRGSEL 3 // MSI clock range provicer
+#define RCC_CR_MSIRANGE 4 // Frequency selector
+
+#define RCC_CR_MSIRANGE_16M 8
 
 #endif /* INC_STM32L476XX_H_ */

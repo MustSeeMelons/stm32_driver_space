@@ -231,6 +231,7 @@ void process_id_read(SPI_Handle_t *spi_handle){
             uint8_t byte;
             SPI_ReceiveData(spi_handle->pSPIx, &byte, 1);
             buffer[i] = byte;
+
         }
     }
 }

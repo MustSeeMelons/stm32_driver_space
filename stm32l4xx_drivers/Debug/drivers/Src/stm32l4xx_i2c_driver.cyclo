@@ -1,0 +1,7 @@
+../drivers/Src/stm32l4xx_i2c_driver.c:3:6:I2C_PCLK	4
+../drivers/Src/stm32l4xx_i2c_driver.c:14:6:I2C_Init	5
+../drivers/Src/stm32l4xx_i2c_driver.c:84:6:I2C_DeInit	4
+../drivers/Src/stm32l4xx_i2c_driver.c:94:6:I2C_MasterSend	7
+../drivers/Src/stm32l4xx_i2c_driver.c:146:6:I2C_Enable	2
+../drivers/Src/stm32l4xx_i2c_driver.c:154:6:I2C_IRQInterruptConfig	12
+../drivers/Src/stm32l4xx_i2c_driver.c:180:6:I2C_IRQPriorityConfig	1

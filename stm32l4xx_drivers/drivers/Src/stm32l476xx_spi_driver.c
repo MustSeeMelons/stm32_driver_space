@@ -52,7 +52,7 @@ void SPI_Init(SPI_Handle_t *pSPIHandle) {
 
     // Clock speed
     pSPIHandle->pSPIx->CR1 &= ~(0x7 << SPI_CR1_BR);
-    pSPIHandle->pSPIx->CR1 |= config->SPI_SclkSpeed << SPI_CR1_BR;
+    pSPIHandle->pSPIx->CR1 |= (config->SPI_SclkSpeed << SPI_CR1_BR);
 
     // DFF
     pSPIHandle->pSPIx->CR2 &= ~(0xF << SPI_CR2_DS);

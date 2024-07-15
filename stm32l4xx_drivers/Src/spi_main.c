@@ -76,7 +76,7 @@ void spi_send() {
         .SPIConfig = {
             .SPI_DeviceMode = SPI_DEVICE_MODE_MASTER,
             .SPI_BusConfig = SPI_BUS_CONFIG_FD, // HD?
-            .SPI_SclkSpeed = SPI_SCLK_SPEED_DIV2, // 4 Mhz
+            .SPI_SclkSpeed = SPI_SCLK_SPEED_DIV4, // 2 Mhz
             .SPI_DFF = SPI_DFF_8BITS,
             .SPI_CPOL = SPI_CPOL_LOW,
             .SPI_CPHA = SPI_CPAH_LOW,

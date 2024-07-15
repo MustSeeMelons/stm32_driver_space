@@ -21,11 +21,9 @@
 #include "stm32l476xx_gpio_driver.h"
 #include "stm32l476xx_spi_driver.h"
 
-
-// XXX why was this generated?
-//#if !defined(__SOFT_FP__) && defined(__ARM_FP)
-//  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
-//#endif
+#if !defined(__SOFT_FP__) && defined(__ARM_FP)
+  #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
+#endif
 
 void delay(uint32_t time) {
     for (uint32_t i = 0; i < time; i++)
