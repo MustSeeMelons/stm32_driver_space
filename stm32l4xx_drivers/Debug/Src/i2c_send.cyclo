@@ -1,4 +1,0 @@
-../Src/i2c_send.c:25:6:delay	2
-../Src/i2c_send.c:30:6:I2C_GPIO_Setup	1
-../Src/i2c_send.c:70:6:I2C_Setup	1
-../Src/i2c_send.c:78:5:main	4

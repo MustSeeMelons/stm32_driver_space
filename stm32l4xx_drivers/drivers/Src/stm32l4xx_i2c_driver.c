@@ -91,23 +91,27 @@ void I2C_DeInit(I2C_RegDef_t *pI2Cx) {
     }
 }
 
-void I2C_MasterSend(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uint8_t slave_addr) {
+void I2C_MasterWrite(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uint8_t slave_addr, I2C_Options options) {
     // Set to 7 bit addressing
     pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_ADD10);
 
     // Set byte count to send
+    pI2CHandle->pI2Cx->CR2 &= ~(0x7F << I2C_CR2_NBYTES);
     pI2CHandle->pI2Cx->CR2 |= (size << I2C_CR2_NBYTES);
 
-    // Stop condition when X bytes are sent
-    pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_AUTOEND);
+    if (options.repeated_start != 1) {
+        // Stop condition when X bytes are sent
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_AUTOEND);
+    } else {
+        pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_AUTOEND);
+    }
+
+    // Master requests a write
+    pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_RD_WRN);
 
     // Configure slave address, assume 7 bit
     pI2CHandle->pI2Cx->CR2 &= ~(0x3FF << I2C_CR2_SADD);
     pI2CHandle->pI2Cx->CR2 |= ((slave_addr << 1) << I2C_CR2_SADD);
-
-    // Wait for bus to be idle
-    while (((pI2CHandle->pI2Cx->ISR >> I2C_ISR_BUSY) & 0x1) == 1)
-        ;
 
     // Generate start condition
     pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_START);
@@ -115,9 +119,6 @@ void I2C_MasterSend(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uin
     // Wait for address to be sent
     while (((pI2CHandle->pI2Cx->CR2 >> I2C_CR2_START) & 0x1) == 1)
         ;
-
-    // Master requests a write
-    pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_RD_WRN);
 
     while (size > 0) {
         // We will get here either from address or data fail
@@ -137,8 +138,67 @@ void I2C_MasterSend(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uin
         size--;
     }
 
-    // Wait for stop to occur
-    while(((pI2CHandle->pI2Cx->ISR >> I2C_ISR_STOPF) & 0x1) == 0);
+    if (options.repeated_start != 1) {
+        // Wait for stop to occur
+        while (((pI2CHandle->pI2Cx->ISR >> I2C_ISR_STOPF) & 0x1) == 0)
+            ;
+    } else {
+        // Wait for N bytes to be transferred
+        while (((pI2CHandle->pI2Cx->ISR >> I2C_ISR_TC) & 0x1) == 0)
+            ;
+    }
+}
+
+void I2C_MasterRead(I2C_Handle_t *pI2CHandle, uint8_t *destination, uint8_t size, uint8_t slave_addr, I2C_Options options) {
+    // Must have cleared before address phase
+    pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_AUTOEND);
+
+    // Set to 7 bit addressing
+    pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_ADD10);
+
+    // Set byte count to read
+    pI2CHandle->pI2Cx->CR2 &= ~(0x7F << I2C_CR2_NBYTES);
+    pI2CHandle->pI2Cx->CR2 |= (size << I2C_CR2_NBYTES);
+
+    // Configure slave address, assume 7 bit
+    pI2CHandle->pI2Cx->CR2 &= ~(0x3FF << I2C_CR2_SADD);
+    pI2CHandle->pI2Cx->CR2 |= ((slave_addr << 1) << I2C_CR2_SADD);
+
+    // Master requests a read
+    pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_RD_WRN);
+
+    // Generate start condition
+    pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_START);
+
+    // Wait for address to be sent
+    while (((pI2CHandle->pI2Cx->CR2 >> I2C_CR2_START) & 0x1) == 1)
+        ;
+
+    if (options.repeated_start != 1) {
+        // Stop condition when X bytes are read
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_AUTOEND);
+    }
+
+    while (size > 0) {
+        // Wait for received data to be copied into the readable register
+        while (((pI2CHandle->pI2Cx->ISR >> I2C_ISR_RXNE) & 0x1) == 0)
+            ;
+
+        *destination = (uint8_t) pI2CHandle->pI2Cx->RXDR;
+
+        size--;
+        destination++;
+    }
+
+    if (options.repeated_start != 1) {
+        // Wait for stop to occur
+        while (((pI2CHandle->pI2Cx->ISR >> I2C_ISR_STOPF) & 0x1) == 0)
+            ;
+    } else {
+        // Wait for N bytes to be transferred
+        while (((pI2CHandle->pI2Cx->ISR >> I2C_ISR_TC) & 0x1) == 0)
+            ;
+    }
 }
 
 void I2C_Enable(I2C_RegDef_t *pI2Cx, uint8_t isEnable) {

@@ -371,24 +371,24 @@ typedef struct {
 #define I2C_CR1_PECEN       23
 
 #define I2C_CR2_SADD    0   // Slave address [7:1] bits for 7-bit
-#define I2C_CR2_RD_WRN  10
+#define I2C_CR2_RD_WRN  10  // 0 - write, 1 - read
 #define I2C_CR2_ADD10   11
 #define I2C_CR2_HEAD10R 12
 #define I2C_CR2_START   13
-#define I2C_CR2_STOP    14
-#define I2C_CR2_NACK    15
+#define I2C_CR2_STOP    14 // STOP condition generation
+#define I2C_CR2_NACK    15 // NACK generation in slave mode after current byte
 #define I2C_CR2_NBYTES  16 // Number of bytes to be transmitted/recieved
 #define I2C_CR2_RELOAD  24
-#define I2C_CR2_AUTOEND 25
+#define I2C_CR2_AUTOEND 25 // Auto if n bytes are transferred, otherwise sets TC flag and stretches SCL
 #define I2C_CR2_PECBYTE 26
 
-#define I2C_ISR_TXE     0
+#define I2C_ISR_TXE     0 // TXDR is empty
 #define I2C_ISR_TXIS    1 // Set to 1 if TXDR is empty
-#define I2C_ISR_RXNE    2
-#define I2C_ISR_ADDR    3
-#define I2C_ISR_NACKF   4
-#define I2C_ISR_STOPF   5
-#define I2C_ISR_TC      6
+#define I2C_ISR_RXNE    2 // Set to 1 if RXDR is ready to read
+#define I2C_ISR_ADDR    3 // Slave mode address match
+#define I2C_ISR_NACKF   4 // Set if NACK recieveda after a byte transmission
+#define I2C_ISR_STOPF   5 // Set if STOP condition is detected
+#define I2C_ISR_TC      6 // NBytes have been transferred
 #define I2C_ISR_TCR     8
 #define I2C_ISR_BERR    8
 #define I2C_ISR_ARLO    9

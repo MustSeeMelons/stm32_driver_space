@@ -1,4 +1,4 @@
-"./Src/i2c_send.o"
+"./Src/i2c_read.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
 "./Startup/startup_stm32l476rgtx.o"

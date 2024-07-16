@@ -14,6 +14,10 @@ typedef struct {
     I2C_Config_t I2C_Config;
 } I2C_Handle_t;
 
+typedef struct {
+    uint8_t repeated_start; // If 1, will not perform STOP
+} I2C_Options;
+
 // Standard mode & Fast mode
 #define I2C_SCL_SPEED_SM    100000UL
 #define I2C_SCL_SPEED_FM2K  200000UL
@@ -32,7 +36,9 @@ void I2C_PCLK(I2C_RegDef_t *pI2Cx, uint8_t isEnable);
 void I2C_Init(I2C_Handle_t *pI2CHandle);
 void I2C_DeInit(I2C_RegDef_t *pI2Cx);
 
-void I2C_MasterSend(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uint8_t slave_addr);
+void I2C_MasterWrite(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uint8_t slave_addr, I2C_Options options);
+
+void I2C_MasterRead(I2C_Handle_t *pI2CHandle, uint8_t *destination, uint8_t size, uint8_t slave_addr, I2C_Options options);
 
 void I2C_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable);
 void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
