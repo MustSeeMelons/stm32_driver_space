@@ -291,8 +291,10 @@ typedef struct {
 
 #define IRQ_NO_I2C1_EVENT   31
 #define IRQ_NO_I2C1_ERROR   32
+
 #define IRQ_NO_I2C2_EVENT   33
 #define IRQ_NO_I2C2_ERROR   34
+
 #define IRQ_NO_I2C3_EVNET   72
 #define IRQ_NO_I2C3_ERROR   73
 
@@ -401,6 +403,10 @@ typedef struct {
 #define I2C_ISR_ADDCODE 17
 
 #define I2C_OA1_EN 15
+
+#define I2C_ICR_STOPCF 5 // Stop detection clear
+#define I2C_ICR_NACKCF 4 // NACK clear
+#define I2C_ICR_ADDRCF 3 // Address mathc clear
 
 #define I2C_TIMINGR_SCLL    0  // SCL Low Period. tSCLL = (SCLL + 1) * tPRESC
 #define I2C_TIMINGR_SCLH    8  // SCL High Period. tSCLH = (SCLH + 1) * tPRESC

@@ -201,6 +201,109 @@ void I2C_MasterRead(I2C_Handle_t *pI2CHandle, uint8_t *destination, uint8_t size
     }
 }
 
+uint8_t I2C_MasterWriteIT(I2C_Handle_t *pI2CHandle, uint8_t *source, uint8_t size, uint8_t slave_addr, I2C_Options options) {
+    if (pI2CHandle->i2c_state == I2C_READY) {
+        // Set to 7 bit addressing
+        pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_ADD10);
+
+        // Set byte count to send
+        pI2CHandle->pI2Cx->CR2 &= ~(0x7F << I2C_CR2_NBYTES);
+        pI2CHandle->pI2Cx->CR2 |= (size << I2C_CR2_NBYTES);
+
+        // Must auto end for IT for such an API
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_AUTOEND);
+
+        // Master requests a write
+        pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_RD_WRN);
+
+        // Configure slave address, assume 7 bit
+        pI2CHandle->pI2Cx->CR2 &= ~(0x3FF << I2C_CR2_SADD);
+        pI2CHandle->pI2Cx->CR2 |= ((slave_addr << 1) << I2C_CR2_SADD);
+
+        // Enable STOP interrupt
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_STOPIE);
+
+        // Enable TX buff empty interrupt
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_TXIE);
+
+        // We want to hear about your experiences
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_ERRIE);
+
+        // NBytes transferred IE
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_TCIE);
+
+        // Generate start condition
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_START);
+
+        // Store the data
+        pI2CHandle->pTxBuffer = source;
+        pI2CHandle->addr = slave_addr;
+        pI2CHandle->i2c_state = I2C_TX;
+        pI2CHandle->tx_len = size;
+        pI2CHandle->sr = options.repeated_start == 1;
+    }
+
+    // IRQ will set state as done so we done reexecute and just return ready
+    if (pI2CHandle->i2c_state == I2C_DONE) {
+        pI2CHandle->i2c_state = I2C_READY;
+        return I2C_READY;
+    }
+
+    return pI2CHandle->i2c_state;
+}
+
+uint8_t I2C_MasterReadIT(I2C_Handle_t *pI2CHandle, uint8_t *destination, uint8_t size, uint8_t slave_addr, I2C_Options options) {
+    if (pI2CHandle->i2c_state == I2C_READY) {
+        // Must have cleared before address phase
+        pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_AUTOEND);
+
+        // Set to 7 bit addressing
+        pI2CHandle->pI2Cx->CR2 &= ~(1 << I2C_CR2_ADD10);
+
+        // Set byte count to read
+        pI2CHandle->pI2Cx->CR2 &= ~(0x7F << I2C_CR2_NBYTES);
+        pI2CHandle->pI2Cx->CR2 |= (size << I2C_CR2_NBYTES);
+
+        // Configure slave address, assume 7 bit
+        pI2CHandle->pI2Cx->CR2 &= ~(0x3FF << I2C_CR2_SADD);
+        pI2CHandle->pI2Cx->CR2 |= ((slave_addr << 1) << I2C_CR2_SADD);
+
+        // Master requests a read
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_RD_WRN);
+
+        // Enable STOP interrupt
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_STOPIE);
+
+        // Enable TX buff empty interrupt
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_RXIE);
+
+        // We want to hear about your experiences
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_ERRIE);
+
+        // NBytes transferred IE
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_TCIE);
+
+        // Generate start condition
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_START);
+
+        pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_AUTOEND);
+
+        // Store the data
+        pI2CHandle->pRxBuffer = destination;
+        pI2CHandle->addr = slave_addr;
+        pI2CHandle->i2c_state = I2C_RX;
+        pI2CHandle->rx_len = size;
+        pI2CHandle->sr = 0;
+    }
+
+    if (pI2CHandle->i2c_state == I2C_DONE) {
+        pI2CHandle->i2c_state = I2C_READY;
+        return I2C_READY;
+    }
+
+    return pI2CHandle->i2c_state;
+}
+
 void I2C_Enable(I2C_RegDef_t *pI2Cx, uint8_t isEnable) {
     if (isEnable) {
         pI2Cx->CR1 |= 1 << I2C_CR1_PE;
@@ -243,4 +346,101 @@ void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority) {
     IRQPriority = IRQPriority << NO_PR_BITS;
 
     *(NVIC_PR_BASE_ADDR + index) |= IRQPriority << (offset * 8);
+}
+
+void I2C_EV_IRQ_Handle(I2C_Handle_t *pI2CHandle) {
+    // Process TX IQ
+    uint8_t is_tx_iq = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_TXIE);
+    uint8_t is_tx_clear = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_TXIS));
+
+    if (is_tx_iq && is_tx_clear) {
+        if (pI2CHandle->i2c_state == I2C_TX && pI2CHandle->tx_len > 0) {
+            *((volatile uint8_t*) &pI2CHandle->pI2Cx->TXDR) = *pI2CHandle->pTxBuffer;
+            pI2CHandle->pTxBuffer++;
+            pI2CHandle->tx_len--;
+        }
+    }
+
+    // Process RX IQ
+    uint8_t is_rx_iq = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_RXIE);
+    uint8_t is_rx_full = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_RXNE));
+
+    if (is_rx_iq && is_rx_full) {
+        if (pI2CHandle->i2c_state == I2C_RX && pI2CHandle->rx_len > 0) {
+            *pI2CHandle->pRxBuffer = (uint8_t) pI2CHandle->pI2Cx->RXDR;
+            pI2CHandle->rx_len--;
+            pI2CHandle->pRxBuffer++;
+        }
+    }
+
+    // Process STOP
+    uint8_t is_stop_ie = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_STOPIE);
+    uint8_t has_stop = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_STOPF));
+
+    if (is_stop_ie && has_stop) {
+        if (pI2CHandle->i2c_state == I2C_RX) {
+            pI2CHandle->pRxBuffer = NULL;
+            pI2CHandle->addr = 0;
+            pI2CHandle->i2c_state = I2C_DONE;
+            pI2CHandle->rx_len = 0;
+            pI2CHandle->sr = 0;
+
+            // Clear up the interupts
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_STOPIE);
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_RXIE);
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_ERRIE);
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_TCIE);
+
+            I2C_AppEventCallback(pI2CHandle, I2C_EV_RX_COMPLETE);
+        } else if (pI2CHandle->i2c_state == I2C_TX) {
+
+            // Clear up the interupts
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_STOPIE);
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_TXIE);
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_ERRIE);
+            pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_TCIE);
+
+            pI2CHandle->pTxBuffer = NULL;
+            pI2CHandle->addr = 0;
+            pI2CHandle->i2c_state = I2C_DONE;
+            pI2CHandle->tx_len = 0;
+            pI2CHandle->sr = 0;
+
+            I2C_AppEventCallback(pI2CHandle, I2C_EV_TX_COMPLETE);
+        }
+
+        pI2CHandle->pI2Cx->ICR |= (1 << I2C_ICR_STOPCF);
+    }
+
+    // Process TC (Transfer complere)
+    uint8_t is_tc = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_TCIE);
+    uint8_t has_tc = pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_TC);
+
+    if (is_tc && has_tc) {
+        pI2CHandle->i2c_state = I2C_DONE;
+
+        // XXX IT does not work with repeated starts
+        // XXX for repeated starts we need autoend 0
+        // XXX that creates a TC IE
+        // XXX which we must clear with start/stop
+        // XXX making the next call bork it all
+        // XXX should make the api a transaction builder, that would overcome this
+
+        // Clearing the TC
+         pI2CHandle->pI2Cx->CR2 |= (1 << I2C_CR2_STOP);
+    }
+}
+
+void I2C_ER_IRQ_Handle(I2C_Handle_t *pI2CHandle) {
+    // XXX we should check ISR for errors, clear them and then call the app callback informing of the shenanigans
+}
+
+__attribute__((weak)) void I2C_AppEventCallback(I2C_Handle_t *pHandle, uint8_t event) {}
+
+void I2C_SlaveWrite(I2C_Handle_t *pI2CHandle, uint8_t data) {
+    pI2CHandle->pI2Cx->TXDR = data;
+}
+
+uint8_t I2C_SlaverRead(I2C_Handle_t *pI2CHandle) {
+    return (uint8_t) pI2CHandle->pI2Cx->RXDR;
 }
