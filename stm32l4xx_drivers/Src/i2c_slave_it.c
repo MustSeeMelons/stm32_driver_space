@@ -88,66 +88,21 @@ void I2C_AppEventCallback(I2C_Handle_t *pHandle, uint8_t event) {
 int main() {
     I2C_GPIO_Setup();
 
+    // Address match IT
+    handle.pI2Cx->CR1 |= (1 << I2C_ISR_ADDR);
+    // Transfer buffer empty IT
+    pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_TXIE);
+    // Recieve buffer full IT
+    pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_RXIE);
+    // Error IT's
+    pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_ERRIE);
+
     I2C_Setup();
 
+    // XXX Setup what should be done on different events
+
     while (1) {
-        // Wait for address match, or setup ADDRIE
-        while ((handle.pI2Cx->ISR & (1 << I2C_ISR_ADDR)) == 0)
-            ;
 
-        // Should we write or read from the bus
-        uint8_t transfer_direction = (handle.pI2Cx->ISR >> I2C_ISR_DIR) & 0x1;
-        // uint8_t add_code = (handle.pI2Cx->ISR >> I2C_ISR_ADDCODE) & 0x7F;
-
-        // If we should read, then it is the command
-        if (transfer_direction == 1) {
-            while (((handle.pI2Cx->ISR >> I2C_ISR_RXNE) & 0x1) == 0)
-                ;
-
-            command = I2C_SlaverRead(&handle);
-
-            // XXX continue;
-            // Technically we should continue the loop, but doing so
-            // fails to get ADDR on the data lenght read, SCL stetched on read
-        }
-
-        // Clear flag
-        handle.pI2Cx->ICR |= (1 << I2C_ICR_ADDRCF);
-
-        // Flush transmit buffer
-        handle.pI2Cx->ISR |= (1 << I2C_ISR_TXE);
-
-        switch (command) {
-            case CMD_GET_LEN:
-                while (((handle.pI2Cx->ISR >> I2C_ISR_TXIS) & 0x1) == 0)
-                    ;
-
-                // Send over byte count
-                I2C_SlaveWrite(&handle, strlen((char*) data));
-
-                command = 0x0;
-                break;
-            case CMD_GET_DATA:
-                // Send over bytes
-                uint8_t size = strlen((char*) data);
-                uint8_t *pData = data;
-
-                while (size > 0) {
-                    // Wait for buffer to be empty
-                    while (((handle.pI2Cx->ISR >> I2C_ISR_TXIS) & 0x1) == 0)
-                        ;
-
-                    I2C_SlaveWrite(&handle, (uint8_t)*pData);
-
-                    pData++;
-                    size--;
-                }
-
-                command = 0x0;
-                break;
-            default:
-                break;
-        }
     }
 
     return 0;

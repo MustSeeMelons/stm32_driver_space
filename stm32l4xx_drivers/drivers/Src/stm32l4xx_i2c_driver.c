@@ -357,6 +357,40 @@ void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority) {
     *(NVIC_PR_BASE_ADDR + index) |= IRQPriority << (offset * 8);
 }
 
+void I2C_EV_IRQ_HandleIT(I2C_Handle_t *pI2CHandle) {
+    uint8_t addr_enabled = pI2CHandle->pI2Cx->CR1 & (1 << I2C_ISR_ADDR);
+    uint8_t is_addr = pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_ADDR);
+
+    if (addr_enabled && is_addr) {
+        // 1 - slave transmit, 0 - receive
+        uint8_t transfer_direction = (handle.pI2Cx->ISR >> I2C_ISR_DIR) & 0x1;
+
+        if (transfer_direction == 1) {
+            // TODO get ready to read command, 1 byte
+        } else {
+            // TODO What do we need to send? Length or data?
+            // XXX driver does not know shit here, nor should it
+        }
+
+        // Clear match flag
+        pI2CHandle->pI2Cx->ICR |= (1 << I2C_ICR_ADDRCF);
+    }
+
+    uint8_t rx_enabled = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_RXIE);
+    uint8_t is_rx = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_RXNE));
+
+    if (is_rx_iq && is_rx_full) {
+        // TODO where shall we put this incoming byte?
+    }
+
+    uint8_t tx_enabled = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_TXIE);
+    uint8_t is_tx = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_TXIS));
+
+    if (is_tx_iq && is_tx_clear) {
+        // TODO what should we send?
+    }
+}
+
 void I2C_EV_IRQ_Handle(I2C_Handle_t *pI2CHandle) {
     // Process TX IQ
     uint8_t is_tx_iq = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_TXIE);

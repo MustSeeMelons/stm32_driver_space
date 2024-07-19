@@ -29,6 +29,7 @@ typedef struct {
     uint8_t i2c_state;
     uint8_t addr;
     uint8_t sr; // repeated start
+
 } I2C_Handle_t;
 
 typedef struct {
@@ -66,6 +67,9 @@ void I2C_IRQInterruptConfig(uint8_t IRQNumber, uint8_t isEnable);
 void I2C_IRQPriorityConfig(uint8_t IRQNumber, uint32_t IRQPriority);
 
 void I2C_EV_IRQ_Handle(I2C_Handle_t *pI2CHandle);
+
+void I2C_EV_IRQ_HandleIT(I2C_Handle_t *pI2CHandle);
+
 void I2C_ER_IRQ_Handle(I2C_Handle_t *pI2CHandle);
 
 void I2C_Enable(I2C_RegDef_t *pI2Cx, uint8_t isEnable);
