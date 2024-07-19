@@ -363,10 +363,10 @@ typedef struct {
 #define I2C_CR1_ANFOFF      12
 #define I2C_CR1_TXDMAEN     14
 #define I2C_CR1_RXDMAEN     15
-#define I2C_CR1_SBC         16
+#define I2C_CR1_SBC         16 // Slave ACK control
 #define I2C_CR1_NOSTRETCH   17
 #define I2C_CR1_WUPEN       18
-#define I2C_CR1_GCEN        19
+#define I2C_CR1_GCEN        19 // General call enable
 #define I2C_CR1_SMBHEN      20
 #define I2C_CR1_SMBDEN      21
 #define I2C_CR1_ALERTEN     22
@@ -402,7 +402,9 @@ typedef struct {
 #define I2C_ISR_DIR     16
 #define I2C_ISR_ADDCODE 17
 
-#define I2C_OA1_EN 15
+#define I2C_AO1         0
+#define I2C_AO1_MODE    10 // 0 - 7bit, 1 - 10bit
+#define I2C_OA1_EN      15
 
 #define I2C_ICR_STOPCF 5 // Stop detection clear
 #define I2C_ICR_NACKCF 4 // NACK clear

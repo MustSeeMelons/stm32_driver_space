@@ -71,13 +71,22 @@ void I2C_Init(I2C_Handle_t *pI2CHandle) {
     pI2CHandle->pI2Cx->TIMINGR |= scl_del << I2C_TIMINGR_SCLDEL;
 
     // Assuming non-zero is a proper address, doing the slave way
-    if (config.I2C_DeviceAddress != 0x0) {
-        pI2CHandle->pI2Cx->OAR1 &= ~0x3FF;
+    if (config.I2C_DeviceAddress != -1) {
+        // Enable general address matching
+        pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_GCEN);
 
+        pI2CHandle->pI2Cx->OAR1 &= ~(1 << I2C_AO1_MODE);    // 7 bit mode
+        pI2CHandle->pI2Cx->OAR1 &= ~0x3FF;                  // Nuke the past
         pI2CHandle->pI2Cx->OAR1 |= (config.I2C_DeviceAddress << 1);
         pI2CHandle->pI2Cx->OAR1 |= (1 << I2C_OA1_EN);
+
+        // Disable slave byte control
+        pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_SBC);
     } else {
+        pI2CHandle->pI2Cx->OAR1 &= ~0x3FF;
         pI2CHandle->pI2Cx->OAR1 &= !(1 << I2C_OA1_EN);
+
+        pI2CHandle->pI2Cx->CR1 &= ~(1 << I2C_CR1_GCEN);
     }
 }
 
@@ -422,7 +431,7 @@ void I2C_EV_IRQ_Handle(I2C_Handle_t *pI2CHandle) {
         // XXX IT does not work with repeated starts
         // XXX for repeated starts we need autoend 0
         // XXX that creates a TC IE
-        // XXX which we must clear with start/stop
+        // XXX which we must clear with start/stop, before we can do the next read/write or stop
         // XXX making the next call bork it all
         // XXX should make the api a transaction builder, that would overcome this
 

@@ -15,7 +15,7 @@
 
 typedef struct {
     uint32_t I2C_SCLSpeed;
-    uint8_t I2C_DeviceAddress; // Slave only
+    int16_t I2C_DeviceAddress; // Slave only
 } I2C_Config_t;
 
 typedef struct {
