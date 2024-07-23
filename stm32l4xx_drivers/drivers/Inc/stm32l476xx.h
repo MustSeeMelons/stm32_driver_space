@@ -114,6 +114,21 @@ typedef struct {
     volatile uint32_t TXDR;     // 0x28, transmit data register
 } I2C_RegDef_t;
 
+// USART/UART register map 40.8.12
+typedef struct {
+    volatile uint32_t CR1;  // 0x00
+    volatile uint32_t CR2;  // 0x04
+    volatile uint32_t CR3;  // 0x08
+    volatile uint32_t BRR;  // 0x0C
+    volatile uint32_t GTPR; // 0x10
+    volatile uint32_t RTOR; // 0x14
+    volatile uint32_t RQR;  // 0x18
+    volatile uint32_t ISR;  // 0x1C
+    volatile uint32_t ICR;  // 0x20
+    volatile uint32_t RDR;  // 0x24
+    volatile uint32_t TDR;  // 0x28
+} USART_RegDef_t;
+
 // RCC register map
 typedef struct {
 	volatile uint32_t CR; // 0x00
@@ -201,6 +216,12 @@ typedef struct {
 #define I2C2 ((I2C_RegDef_t*)I2C2_BASE_ADDR)
 #define I2C3 ((I2C_RegDef_t*)I2C3_BASE_ADDR)
 
+#define USART1 ((USART_RegDef_t *) USART1_BASE_ADDR)
+#define USART2 ((USART_RegDef_t *) USART2_BASE_ADDR)
+#define USART3 ((USART_RegDef_t *) USART3_BASE_ADDR)
+#define UART4 ((USART_RegDef_t *) UART4_BASE_ADDR)
+#define UART5 ((USART_RegDef_t *) UART5_BASE_ADDR)
+
 #define RCC ((RCC_RegDef_t*)RCC_BASE_ADDR)
 
 #define EXTI ((EXTI_RegDef_t*)EXTI_BASE_ADDR)
@@ -276,6 +297,12 @@ typedef struct {
 #define I2C2_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 22)); (RCC->APB1RSTR1 &= ~(1 << 22));} while(0)
 #define I2C3_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 23)); (RCC->APB1RSTR1 &= ~(1 << 23));} while(0)
 
+#define USART1_REG_RESET() do {(RCC->APB2RSTR |= (1 << 14)); (RCC->APB2RSTR &= ~(1 << 14));} while(0)
+#define USART2_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 17)); (RCC->APB1RSTR1 &= ~(1 << 17));} while(0)
+#define USART3_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 18)); (RCC->APB1RSTR1 &= ~(1 << 18));} while(0)
+#define UART4_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 19)); (RCC->APB1RSTR1 &= ~(1 << 19));} while(0)
+#define UART5_REG_RESET() do {(RCC->APB1RSTR1 |= (1 << 20)); (RCC->APB1RSTR1 &= ~(1 << 20));} while(0)
+
 // IRQ numbers
 #define IRQ_NO_EXTI0        6
 #define IRQ_NO_EXTI1        7
@@ -297,6 +324,13 @@ typedef struct {
 
 #define IRQ_NO_I2C3_EVNET   72
 #define IRQ_NO_I2C3_ERROR   73
+
+#define IRQ_NO_USART1 37
+#define IRQ_NO_USART2 38
+#define IRQ_NO_USART3 39
+
+#define IRQ_NO_UART4 52
+#define IRQ_NO_UART5 53
 
 #define NVIC_IRQ_PRI15     15
 
@@ -415,6 +449,80 @@ typedef struct {
 #define I2C_TIMINGR_SDADEL  16 // Data hold time. Delay betweeen SCL falling and SDA edge. tSDADEL = SDADEL * tPRESC
 #define I2C_TIMINGR_SCLDEL  20 // Data setup time. tSCLDEL = (SCLDEL + 1) * tPRESC. Delay between SDA edge and SCL rising edge,
 #define I2C_TIMINGR_PRESC   28 // Timing prescaler. tPRESC = (PRESC + 1) * tI2CCLK.
+
+// USART bit positions
+#define USART_CR1_UE        0 // USART enable
+#define USART_CR1_UESM      1
+#define USART_CR1_RE        2
+#define USART_CR1_TE        3
+#define USART_CR1_IDLEIE    4
+#define USART_CR1_RXNEIE    5
+#define USART_CR1_TCIE      6
+#define USART_CR1_TXEIE     7
+#define USART_CR1_PEIE      8
+#define USART_CR1_PS        9
+#define USART_CR1_PCE       10
+#define USART_CR1_WAKE      11
+#define USART_CR1_M0        12
+#define USART_CR1_MME       13
+#define USART_CR1_CMIE      14
+#define USART_CR1_OVER8     15
+#define USART_CR1_DEDT      16
+#define USART_CR1_DEAT      21
+#define USART_CR1_RTOIE     26
+#define USART_CR1_EOBIE     27
+#define USART_CR1_M1        28
+
+#define USART_CR2_STOP      12
+
+#define USART_CR3_EIE       0
+#define USART_CR3_IREN      1
+#define USART_CR3_IRLP      2
+#define USART_CR3_HDSEL     3
+#define USART_CR3_NACK      4
+#define USART_CR3_SCEN      5
+#define USART_CR3_DMAR      6
+#define USART_CR3_DMAT      7
+#define USART_CR3_RTSE      8
+#define USART_CR3_CTSE      9
+#define USART_CR3_CTSIE     10
+#define USART_CR3_ONEBIT    11
+#define USART_CR3_OVRDIS    12
+#define USART_CR3_DDRE      13
+#define USART_CR3_DEM       14
+#define USART_CR3_DEP       15
+#define USART_CR3_SCARCNT0  17
+#define USART_CR3_SCARCNT1  18
+#define USART_CR3_SCARCNT2  19
+#define USART_CR3_WUS0      20
+#define USART_CR3_WUS1      21
+#define USART_CR3_WUFIE     22
+#define USART_CR3_UCESM     23
+#define USART_CR3_TCBGTIE   24
+
+#define USART_ISR_PE    0
+#define USART_ISR_FE    1
+#define USART_ISR_NF    2
+#define USART_ISR_ORE   3
+#define USART_ISR_IDLE  4
+#define USART_ISR_RXNE  5
+#define USART_ISR_TC    6
+#define USART_ISR_TXE   7
+#define USART_ISR_LBDF  8
+#define USART_ISR_CTSIF 9
+#define USART_ISR_CTS   10
+#define USART_ISR_RTOF  11
+#define USART_ISR_EOBF  12
+#define USART_ISR_ABRE  14
+#define USART_ISR_ABRF  15
+#define USART_ISR_BUSY  16
+#define USART_ISR_CMF   17
+#define USART_ISR_SBKF  18
+#define USART_ISR_RWU   19
+#define USART_ISR_WUF   20
+#define USART_ISR_TEACK 21
+#define USART_ISR_REACK 22
+#define USART_ISR_TCBGT 25
 
 #define RCC_CR_MSIRGSEL 3 // MSI clock range provicer
 #define RCC_CR_MSIRANGE 4 // Frequency selector

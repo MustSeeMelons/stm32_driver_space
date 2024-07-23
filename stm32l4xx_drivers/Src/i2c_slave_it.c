@@ -91,11 +91,11 @@ int main() {
     // Address match IT
     handle.pI2Cx->CR1 |= (1 << I2C_ISR_ADDR);
     // Transfer buffer empty IT
-    pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_TXIE);
+    handle.pI2Cx->CR1 |= (1 << I2C_CR1_TXIE);
     // Recieve buffer full IT
-    pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_RXIE);
+    handle.pI2Cx->CR1 |= (1 << I2C_CR1_RXIE);
     // Error IT's
-    pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_ERRIE);
+    handle.pI2Cx->CR1 |= (1 << I2C_CR1_ERRIE);
 
     I2C_Setup();
 

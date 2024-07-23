@@ -8,8 +8,9 @@
 ../drivers/Src/stm32l4xx_i2c_driver.c:316:6:I2C_Enable	2
 ../drivers/Src/stm32l4xx_i2c_driver.c:324:6:I2C_IRQInterruptConfig	12
 ../drivers/Src/stm32l4xx_i2c_driver.c:350:6:I2C_IRQPriorityConfig	1
-../drivers/Src/stm32l4xx_i2c_driver.c:360:6:I2C_EV_IRQ_Handle	15
-../drivers/Src/stm32l4xx_i2c_driver.c:443:6:I2C_ER_IRQ_Handle	1
-../drivers/Src/stm32l4xx_i2c_driver.c:447:28:I2C_AppEventCallback	1
-../drivers/Src/stm32l4xx_i2c_driver.c:449:6:I2C_SlaveWrite	1
-../drivers/Src/stm32l4xx_i2c_driver.c:453:9:I2C_SlaverRead	1
+../drivers/Src/stm32l4xx_i2c_driver.c:360:6:I2C_EV_IRQ_HandleIT	3
+../drivers/Src/stm32l4xx_i2c_driver.c:394:6:I2C_EV_IRQ_Handle	15
+../drivers/Src/stm32l4xx_i2c_driver.c:477:6:I2C_ER_IRQ_Handle	1
+../drivers/Src/stm32l4xx_i2c_driver.c:481:28:I2C_AppEventCallback	1
+../drivers/Src/stm32l4xx_i2c_driver.c:483:6:I2C_SlaveWrite	1
+../drivers/Src/stm32l4xx_i2c_driver.c:487:9:I2C_SlaverRead	1
