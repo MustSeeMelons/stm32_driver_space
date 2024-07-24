@@ -1,9 +1,10 @@
 ../drivers/Src/stm32l476xx_usart_driver.c:3:6:USART_PCLK	6
 ../drivers/Src/stm32l476xx_usart_driver.c:17:6:USART_Init	17
-../drivers/Src/stm32l476xx_usart_driver.c:93:6:USART_DeInit	6
-../drivers/Src/stm32l476xx_usart_driver.c:107:6:USART_Write	9
-../drivers/Src/stm32l476xx_usart_driver.c:152:6:USART_Read	10
-../drivers/Src/stm32l476xx_usart_driver.c:194:6:USART_IRQInterruptConfig	12
-../drivers/Src/stm32l476xx_usart_driver.c:220:6:USART_IRQPriorityConfig	1
-../drivers/Src/stm32l476xx_usart_driver.c:230:6:USART_Enable	1
-../drivers/Src/stm32l476xx_usart_driver.c:234:29:USART_AppEventCallback	1
+../drivers/Src/stm32l476xx_usart_driver.c:94:6:USART_DeInit	6
+../drivers/Src/stm32l476xx_usart_driver.c:109:6:USART_SetBaudRate	1
+../drivers/Src/stm32l476xx_usart_driver.c:122:6:USART_Write	9
+../drivers/Src/stm32l476xx_usart_driver.c:166:6:USART_Read	11
+../drivers/Src/stm32l476xx_usart_driver.c:211:6:USART_IRQInterruptConfig	12
+../drivers/Src/stm32l476xx_usart_driver.c:237:6:USART_IRQPriorityConfig	1
+../drivers/Src/stm32l476xx_usart_driver.c:247:6:USART_Enable	1
+../drivers/Src/stm32l476xx_usart_driver.c:251:29:USART_AppEventCallback	1

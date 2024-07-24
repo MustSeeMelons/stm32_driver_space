@@ -88,6 +88,7 @@ void USART_Init(USART_Handle_t *pUSARTHandle) {
     }
 
     // Configure baud
+    USART_SetBaudRate(pUSARTHandle, config.UASRT_Baud);
 }
 
 void USART_DeInit(USART_RegDef_t *pUSARTx) {
@@ -104,12 +105,28 @@ void USART_DeInit(USART_RegDef_t *pUSARTx) {
     }
 }
 
+// TODO this function assumes way too much
 void USART_SetBaudRate(USART_Handle_t *pUSARTHandle, uint32_t baud_rate) {
+    // XXX debug shows mantisa/fraction part as the BRR but the datasheet does not, following the sheet
 
+    // XXX assume 4 Mhz MSI (default), should make a function for this
+    // XXX assume OVER8 = 0
+
+    uint32_t usart_div = 4000000 / baud_rate;
+    pUSARTHandle->pUSARTx->BRR = usart_div;
+
+    // XXX If OVER8 = 1
+    // BRR[3:0] has to equal USARTDIV[3:0] right shifted by 1
+    // BRR[X:4] are USARTDIV[X:4]
+    // BRR[3:0] must be unset!
 }
 
 void USART_Write(USART_Handle_t *pUSARTHandle, uint8_t *source, uint8_t size) {
-    uint8_t word_len = (pUSARTHandle->pUSARTx->CR1 >> USART_CR1_M0) & 0x3;
+    uint8_t m0 = (pUSARTHandle->pUSARTx->CR1 >> USART_CR1_M0);
+    uint8_t m1 = (pUSARTHandle->pUSARTx->CR1 >> USART_CR1_M1);
+
+    uint8_t word_len = m0 | (m1 << 1);
+
 
     for (size_t i = 0; i < size; i++) {
         // Wait when we can write new data
@@ -133,8 +150,7 @@ void USART_Write(USART_Handle_t *pUSARTHandle, uint8_t *source, uint8_t size) {
 
                 switch (pUSARTHandle->USART_Config.UASRT_ParityControl) {
                     case USART_PARITY_DISABLE:
-                        source++;
-                        source++;
+                        source += 2;
                         break;
                     case USART_PARITY_EN_EVEN:
                     case USART_PARITY_EN_ODD:
