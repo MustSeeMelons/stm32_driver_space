@@ -362,14 +362,14 @@ void I2C_EV_IRQ_HandleIT(I2C_Handle_t *pI2CHandle) {
     uint8_t is_addr = pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_ADDR);
 
     if (addr_enabled && is_addr) {
-        // 1 - slave transmit, 0 - receive
+        // 1 - slave transmit, 0 - slave receive
         uint8_t transfer_direction = (pI2CHandle->pI2Cx->ISR >> I2C_ISR_DIR) & 0x1;
 
         if (transfer_direction == 1) {
-            // TODO get ready to read command, 1 byte
+            // It is a read command, nothing to do here
         } else {
-            // TODO What do we need to send? Length or data?
-            // XXX driver does not know shit here, nor should it
+            // Flush the transmit register
+            pI2CHandle->pI2Cx->ISR |= (1 << I2C_ISR_TXE);
         }
 
         // Clear match flag
@@ -379,15 +379,26 @@ void I2C_EV_IRQ_HandleIT(I2C_Handle_t *pI2CHandle) {
     uint8_t rx_enabled = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_RXIE);
     uint8_t is_rx = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_RXNE));
 
+    // Inform the application on every byte [could be made configurable for X bytes]
+    // Application is responsible of figuring out if it is a message & resetting the buffer
     if (rx_enabled && is_rx) {
-        // TODO where shall we put this incoming byte?
+        pI2CHandle->rx_buffer[pI2CHandle->rx_index++] = pI2CHandle->pI2Cx->RXDR;
+
+        I2C_AppEventCallback(pI2CHandle, I2C_EV_RX_COMPLETE);
     }
 
     uint8_t tx_enabled = pI2CHandle->pI2Cx->CR1 & (1 << I2C_CR1_TXIE);
     uint8_t is_tx = (pI2CHandle->pI2Cx->ISR & (1 << I2C_ISR_TXIS));
 
+    // Inform the application when TX is complete, dont bother with individual bytes
     if (tx_enabled && is_tx) {
-        // TODO what should we send?
+        pI2CHandle->pI2Cx->TXDR = *pI2CHandle->pTxBuffer;
+        pI2CHandle->tx_len--;
+        if (pI2CHandle->tx_len != 0) {
+            pI2CHandle->pTxBuffer++;
+        } else {
+            I2C_AppEventCallback(pI2CHandle, I2C_EV_TX_COMPLETE);
+        }
     }
 }
 
@@ -479,6 +490,15 @@ void I2C_ER_IRQ_Handle(I2C_Handle_t *pI2CHandle) {
 }
 
 __attribute__((weak)) void I2C_AppEventCallback(I2C_Handle_t *pHandle, uint8_t event) {}
+
+// Must be called when something consumable is found in the RX buffer
+void I2C_IT_TX_Reset(I2C_Handle_t *pI2CHandle) {
+    for (size_t i = 0; i < I2C_RX_BUFFER_LENGTH; i++) {
+        pI2CHandle->rx_buffer[i] = 0;
+    }
+
+    pI2CHandle->rx_index = 0;
+}
 
 void I2C_SlaveWrite(I2C_Handle_t *pI2CHandle, uint8_t data) {
     pI2CHandle->pI2Cx->TXDR = data;

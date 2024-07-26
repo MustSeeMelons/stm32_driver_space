@@ -15,7 +15,8 @@
 // PB6, SCL (AF4)
 // PB7, SDA (AF4)
 
-uint8_t data[256] = "this is not a test";
+uint8_t data[] = "this is not a test, or is it?";
+uint8_t data_len;
 uint8_t slave_addr = 0x68;
 
 static I2C_Handle_t handle = {
@@ -81,25 +82,58 @@ void I2C_Setup() {
     I2C_Enable(handle.pI2Cx, ENABLE);
 }
 
-void I2C_AppEventCallback(I2C_Handle_t *pHandle, uint8_t event) {
 
+void I2C_AppEventCallback(I2C_Handle_t *pHandle, uint8_t event) {
+    switch (event) {
+        case I2C_EV_RX_COMPLETE:
+            // Depending on command, setup TX data
+            command = pHandle->rx_buffer[0];
+
+            switch (command) {
+                case CMD_GET_LEN:
+                    data_len = strlen((char*) data);
+                    pHandle->pTxBuffer = &data_len;
+                    pHandle->tx_len = 1;
+                    break;
+                case CMD_GET_DATA:
+                    pHandle->pTxBuffer = data;
+                    pHandle->tx_len = data_len;
+                    break;
+                default:
+                    // Blink a LED bitterly
+                    break;
+            }
+
+            // We only receive single bytes from master, so reset after each event
+            I2C_IT_TX_Reset(pHandle);
+            break;
+        case I2C_EV_TX_COMPLETE:
+            // Dont really care, we could keep track if data has been sent and perform cleanup
+            command = 0x0;
+            break;
+        default:
+            break;
+    }
 }
 
 int main() {
     I2C_GPIO_Setup();
 
+    I2C_Setup();
+
+    I2C_IRQInterruptConfig(IRQ_NO_I2C1_EVENT, ENABLE);
+    I2C_IRQInterruptConfig(IRQ_NO_I2C1_ERROR, ENABLE);
+
+    // TODO move these into a function
+
     // Address match IT
-    handle.pI2Cx->CR1 |= (1 << I2C_ISR_ADDR);
+    handle.pI2Cx->CR1 |= (1 << I2C_CR1_ADDRIE);
     // Transfer buffer empty IT
     handle.pI2Cx->CR1 |= (1 << I2C_CR1_TXIE);
     // Recieve buffer full IT
     handle.pI2Cx->CR1 |= (1 << I2C_CR1_RXIE);
     // Error IT's
     handle.pI2Cx->CR1 |= (1 << I2C_CR1_ERRIE);
-
-    I2C_Setup();
-
-    // XXX Setup what should be done on different events
 
     while (1) {
 
@@ -108,8 +142,9 @@ int main() {
     return 0;
 }
 
+//
 void I2C1_EV_IRQHandler(void) {
-    I2C_EV_IRQ_Handle(&handle);
+    I2C_EV_IRQ_HandleIT(&handle);
 }
 
 void I2C1_ER_IRQHandler(void) {

@@ -1,6 +1,6 @@
+"./Src/i2c_slave_it.o"
 "./Src/syscalls.o"
 "./Src/sysmem.o"
-"./Src/usart_main.o"
 "./Startup/startup_stm32l476rgtx.o"
 "./drivers/Src/stm32l476xx_gpio_driver.o"
 "./drivers/Src/stm32l476xx_spi_driver.o"

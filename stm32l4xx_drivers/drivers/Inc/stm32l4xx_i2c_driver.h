@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 #include "stm32l476xx.h"
 
 #define I2C_READY   0
@@ -13,6 +14,8 @@
 #define I2C_EV_TX_COMPLETE 0
 #define I2C_EV_RX_COMPLETE 1
 
+#define I2C_RX_BUFFER_LENGTH 256
+
 typedef struct {
     uint32_t I2C_SCLSpeed;
     int16_t I2C_DeviceAddress; // Slave only
@@ -21,7 +24,11 @@ typedef struct {
 typedef struct {
     I2C_RegDef_t *pI2Cx;
     I2C_Config_t I2C_Config;
+    // Slave IT supports
+    uint32_t rx_buffer[I2C_RX_BUFFER_LENGTH];
+    uint16_t rx_index;
 
+    // Master IT supports
     uint8_t *pTxBuffer;
     uint8_t *pRxBuffer;
     uint8_t tx_len;
@@ -77,5 +84,7 @@ void I2C_Enable(I2C_RegDef_t *pI2Cx, uint8_t isEnable);
 uint8_t I2C_GetFlagStatus(I2C_RegDef_t *pI2Cx, uint32_t flagMask);
 
 void I2C_AppEventCallback(I2C_Handle_t *pHandle, uint8_t event);
+
+void I2C_IT_TX_Reset(I2C_Handle_t *pI2CHandle);
 
 #endif /* INC_STM32L4XX_I2C_DRIVER_H_ */

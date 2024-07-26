@@ -1,0 +1,7 @@
+../Src/i2c_slave_it.c:32:6:delay	24	static
+../Src/i2c_slave_it.c:37:6:I2C_GPIO_Setup	32	static
+../Src/i2c_slave_it.c:77:6:I2C_Setup	8	static
+../Src/i2c_slave_it.c:85:6:I2C_AppEventCallback	16	static
+../Src/i2c_slave_it.c:118:5:main	8	static
+../Src/i2c_slave_it.c:145:6:I2C1_EV_IRQHandler	8	static
+../Src/i2c_slave_it.c:149:6:I2C1_ER_IRQHandler	8	static
